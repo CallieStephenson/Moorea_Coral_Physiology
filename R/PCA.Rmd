@@ -1,0 +1,13 @@
+---
+title: "Create PCA"
+author: "Callie Stephenson"
+date: "2024-12-03"
+output: html_document
+---
+Load packages:
+```{r}
+library(dplyr)
+library(corrplot)
+library(ggplot2)
+```
+
