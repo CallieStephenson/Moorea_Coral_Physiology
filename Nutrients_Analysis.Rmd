@@ -15,11 +15,25 @@ library(ggplot2)
 library(fishualize)
 library(corrplot)
 library(PerformanceAnalytics)
+library(performance)
 ```
+
+ggplot theme
+```{r}
+custom_theme <- theme_minimal(base_size = 10)+
+  theme(
+    legend.position = "none",
+    plot.title = element_text(hjust = 0.5),
+    axis.title = element_text(size = 10),
+    axis.text = element_text(size = 10)
+  )
+```
+
 
 load data
 ```{r}
 response_data <- read.csv("data/T1_response_data.csv")
+explanatory_variables <- read.csv("data/explanatory_variables.csv")
 all_nut <- read.csv("data/All_Nutrients_Processed.csv")
 ```
 
@@ -100,11 +114,11 @@ biplot(pca)
 scores <- as.data.frame(pca$scores)
 loadings <- as.data.frame(pca$loadings[, 1:2])  # First two components
 
-pca_plot <- ggplot(scores, aes(x = Comp.1, y = Comp.2)) +
+pca_plot <- ggplot(scores, aes(x = -1*(Comp.1), y = Comp.2)) +
   geom_point() +
-  geom_segment(data = loadings, aes(x = 0, y = 0, xend = 3*Comp.1, yend = 3*Comp.2),
+  geom_segment(data = loadings, aes(x = 0, y = 0, xend = -3*Comp.1, yend = 3*Comp.2),
                arrow = arrow(length = unit(0.2, "cm")), color = '#47c16e') +
-  geom_text(data = loadings, aes(x = 3*Comp.1, y = 3*Comp.2, label = rownames(loadings)),
+  geom_text(data = loadings, aes(x = -2*Comp.1, y = 3*Comp.2, label = rownames(loadings)),
             color = '#47c16e', hjust = -0.2) +
   labs(
     title = "Principal Component Analysis of Nutrient Data",
@@ -115,10 +129,11 @@ pca_plot <- ggplot(scores, aes(x = Comp.1, y = Comp.2)) +
   theme(
     plot.title = element_text(hjust = 0.5, size = 12, face = "bold"),
     axis.title = element_text(size = 12)
-  )
+  )+
+  scale_x_continuous(limits = c(-5, 5))
 
 pca_plot
-#ggsave(pca_plot, filename = "PCA_Plot.png", dpi = 600, width = 7, height = 5)
+ggsave(pca_plot, filename = "output/PCA_Plot.png", dpi = 600, width = 7, height = 5)
 ```
 
 ```{r}
@@ -146,11 +161,23 @@ explanatory_variables <- nut_no_seep[,c("CowTagID", "pc1", pulse_columns, sd_col
 
 ### plot raw
 ```{r}
-ggplot(PAC_model_data, aes(x = pc1, y = Percent_Change, color = Genotype, shape = Cage_Uncaged)) +
+pac_growth_raw <- ggplot(PAC_model_data, aes(x = pc1, y = Percent_Change, color = Genotype, shape = Cage_Uncaged)) +
   geom_point() +
-  labs(x = "PCA - low numbers reflect high SGD influence", y = "Percent Change in Buoyant Weight", title = "Pocillopora acuta change in buoyant weight by SGD exposure") +
+  labs(
+    x = "PC1",
+    y = "Percent Change in Buoyant Weight",
+    title = " "
+    #title = expression(italic("Pocillopora acuta") ~ "Change in Buoyant Weight by Nutrient Pulses")
+  ) +
   scale_color_fish_d(option = "Coryphaena_hippurus", direction = -1) +
-  theme_minimal()
+  theme_minimal()+
+  theme(legend.position="none",
+        plot.background = element_rect(fill = "white")) +
+  guides(color = "none", shape = "none") 
+
+pac_growth_raw
+
+ggsave("output/pac_growth_nutrientpca_raw.png",pac_growth_raw, height = 5, width = 5.5)
 ```
 
 ### linear
@@ -180,11 +207,17 @@ This model does not support the hypothesis that nutriencts from SGD contribute t
 
 ### plot raw
 ```{r}
-ggplot(PRU_model_data, aes(x = pc1, y = Percent_Change, color = Genotype, shape = Cage_Uncaged)) +
+pru_growth_raw <- ggplot(PRU_model_data, aes(x = pc1, y = Percent_Change, color = Genotype, shape = Cage_Uncaged)) +
   geom_point() +
-  labs(x = "PCA - low numbers reflect high SGD influence", y = "Percent Change in Buoyant Weight", title = "Porites rus change in buoyant weight by SGD exposure") +
+  labs(x = "PC1", y = "Percent Change in Buoyant Weight", title = " ") +
   scale_color_fish_d(option = "Coryphaena_hippurus", direction = -1) +
-  theme_minimal()
+  theme_minimal()+
+  theme(legend.position="none",
+        plot.background = element_rect(fill = "white")) +
+  guides(color = "none", shape = "none") 
+
+pru_growth_raw
+ggsave("output/pru_growth_nutrientpca_raw.png",pru_growth_raw, height = 5, width = 5.5)
 ```
 
 ### linear
@@ -235,11 +268,20 @@ When only looking at caged samples, we still don't find any influence of PC1 on 
 ## Pocillopora acuta
 
 ```{r}
-ggplot(PAC_model_data, aes(x = pc1, y = log10(FSC.Events_per_cm_2), color = Genotype, shape = Cage_Uncaged)) +
+pac_symb_raw <- ggplot(PAC_model_data, aes(x = pc1, y = log10(FSC.Events_per_cm_2), color = Genotype, shape = Cage_Uncaged)) +
   geom_point() +
-  labs(x = "PCA - low numbers reflect high SGD influence", y = "Log10 transformed Symbiont Abundance", title = "Pocillopora acuta change in buoyant weight by SGD exposure") +
+  labs(x = "PC1", 
+       y = expression(paste("Endosymbiont density (cells ", 10^6, cm^2, ")")),
+      title = " ") +
   scale_color_fish_d(option = "Coryphaena_hippurus", direction = -1) +
-  theme_minimal()
+  theme_minimal()+
+  theme(legend.position="none",
+        plot.background = element_rect(fill = "white")) +
+  guides(color = "none", shape = "none") 
+
+pac_symb_raw
+
+ggsave("output/pac_symb_nutrientpca_raw.png",pac_symb_raw, height = 5, width = 5.5)
 ```
 
 ### linear model
@@ -265,11 +307,20 @@ This model does not support the hypothesis that nutriencts from SGD contribute t
 
 ## Porites rus
 ```{r}
-ggplot(PRU_model_data, aes(x = pc1, y = log10(FSC.Events_per_cm_2), color = Genotype, shape = Cage_Uncaged)) +
+pru_symb_raw <- ggplot(PRU_model_data, aes(x = pc1, y = log10(FSC.Events_per_cm_2), color = Genotype, shape = Cage_Uncaged)) +
   geom_point() +
-  labs(x = "PCA - low numbers reflect high SGD influence", y = "Log10 transformed Symbiont Abundance", title = "Porites rus change in buoyant weight by SGD exposure") +
+  labs(x = "PC1", 
+       y = expression(paste("Endosymbiont density (cells ", 10^6, cm^2, ")")),
+      title = " ") +
   scale_color_fish_d(option = "Coryphaena_hippurus", direction = -1) +
-  theme_minimal()
+  theme_minimal()+
+  theme(legend.position="none",
+        plot.background = element_rect(fill = "white")) +
+  guides(color = "none", shape = "none") 
+
+pru_symb_raw
+
+ggsave("output/pru_symb_nutrientpca_raw.png",pru_symb_raw, height = 5, width = 5.5)
 ```
 
 ### linear model:
@@ -314,6 +365,127 @@ Anova(polynomial_symb_model_pru_c)
 ```
 
 This model does not support the hypothesis that nutrients from SGD contribute to the variance in symbiont density in Porites rus
+# Chlorophyll
+
+## Pocillopora acuta
+```{r}
+pac_chl_raw <- ggplot(PAC_model_data, aes(x = pc1, y = Chl_ug.cm.2, color = Genotype, shape = Cage_Uncaged)) +
+  geom_point() +
+  labs(x = "PC1", 
+       y = expression(paste("Chlorophyll density (μg ", cm^2, ")")),
+      title = " ") +
+  scale_color_fish_d(option = "Coryphaena_hippurus", direction = -1) +
+  theme_minimal()+
+  theme(legend.position="none",
+        plot.background = element_rect(fill = "white")) +
+  guides(color = "none", shape = "none") 
+
+pac_chl_raw
+
+ggsave("output/pac_chl_nutrientpca_raw.png",pac_chl_raw, height = 5, width = 5.5)
+```
+
+```{r}
+linear_chl_model_pac <- lmer(Chl_ug.cm.2 ~ pc1 +
+                                  (1|Genotype) + (1|Cage_Uncaged), data = PAC_model_data)
+#check_model(linear_growth_model_pac)
+Anova(linear_chl_model_pac)
+```
+
+### Plot significant model
+```{r}
+pred_chl <- ggpredict(linear_chl_model_pac, terms = "pc1")
+
+#annnotations
+anova_results <- car::Anova(linear_chl_model_pac)
+p_values <- anova_results$`Pr(>Chisq)`[1]  # Adjust index based on your model's fixed effects
+names(p_values) <- rownames(anova_results)[1] 
+
+plot_chl <- ggplot() +
+  # Raw data points
+  geom_point(data = PAC_model_data, 
+             aes(x = pc1, y = Chl_ug.cm.2), color = "grey50", alpha = 0.6) +
+  # Prediction line with confidence interval
+  geom_line(data = pred_chl, aes(x = x, y = predicted), color = "#21908c") +
+  geom_ribbon(data = pred_chl, aes(x = x, ymin = conf.low, ymax = conf.high), 
+              fill = "#21908c", alpha = 0.2) +
+  scale_y_continuous(limits = c(-1.5,25)) +
+  labs(
+    x = "PC1",
+    y = expression(paste("Chlorophyll density (μg ", cm^2, ")"))
+  ) +
+  custom_theme+
+  annotate("text", y = 1, x = max(pred_chl$x, na.rm=TRUE), 
+           label = paste("p =", round(p_values["pc1"], 6)), 
+           hjust = 1.1, vjust = 1, size = 3)
+```
+
+```{r}
+polynomial_chl_model_pac <- lmer(Chl_ug.cm.2 ~ poly(pc1, 2) +
+                                  (1|Genotype) + (1|Cage_Uncaged), data = PAC_model_data)
+#check_model(polynomial_growth_model_pru)
+Anova(polynomial_chl_model_pac)
+```
+
+```{r}
+pred_chl_poly <- ggpredict(polynomial_chl_model_pac, terms = "pc1")
+
+#annnotations
+anova_results <- car::Anova(polynomial_chl_model_pac)
+p_values <- anova_results$`Pr(>Chisq)`[1]  # Adjust index based on your model's fixed effects
+names(p_values) <- rownames(anova_results)[1] 
+
+plot_chl <- ggplot() +
+  # Raw data points
+  geom_point(data = PAC_model_data, 
+             aes(x = pc1, y = Chl_ug.cm.2), color = "grey50", alpha = 0.6) +
+  # Prediction line with confidence interval
+  geom_line(data = pred_chl, aes(x = x, y = predicted), color = "#21908c") +
+  geom_ribbon(data = pred_chl, aes(x = x, ymin = conf.low, ymax = conf.high), 
+              fill = "#21908c", alpha = 0.2) +
+  scale_y_continuous(limits = c(-1.5,25)) +
+  labs(
+    x = "PC1",
+    y = expression(paste("Chlorophyll density (μg ", cm^2, ")"))
+  ) +
+  custom_theme+
+  annotate("text", y = 1, x = max(pred_chl$x, na.rm=TRUE), 
+           label = paste("p =", round(p_values["poly(pc1, 2)"], 6)), 
+           hjust = 1.1, vjust = 1, size = 3)
+```
+
+
+## Porites rus
+```{r}
+pru_chl_raw <- ggplot(PRU_model_data, aes(x = pc1, y = Chl_ug.cm.2, color = Genotype, shape = Cage_Uncaged)) +
+  geom_point() +
+  labs(x = "PC1", 
+       y = expression(paste("Chlorophyll density (μg ", cm^2, ")")),
+      title = " ") +
+  scale_color_fish_d(option = "Coryphaena_hippurus", direction = -1) +
+  theme_minimal()+
+  theme(legend.position="none",
+        plot.background = element_rect(fill = "white")) +
+  guides(color = "none", shape = "none") 
+
+pru_chl_raw
+
+ggsave("output/pru_chl_nutrientpca_raw.png",pru_chl_raw, height = 5, width = 5.5)
+```
+
+```{r}
+linear_chl_model_pru <- lmer(Chl_ug.cm.2 ~ pc1 +
+                                  (1|Genotype) + (1|Cage_Uncaged), data = PRU_model_data)
+#check_model(linear_growth_model_pru)
+Anova(linear_chl_model_pru)
+```
+
+```{r}
+polynomial_chl_model_pru <- lmer(Chl_ug.cm.2 ~ poly(pc1, 2) +
+                                  (1|Genotype) + (1|Cage_Uncaged), data = PRU_model_data)
+#check_model(polynomial_growth_model_pru)
+Anova(polynomial_chl_model_pru)
+```
 
 # Heterotrophy
 ## Carbon
@@ -326,6 +498,22 @@ SI_PAC_model_data <- PAC_model_data %>%
   filter(!is.na(Δ13C))
 ggplot(data = SI_PAC_model_data, (aes(y=Δ13C, x= pc1))) +
          geom_point()
+
+pac_13C_raw <- ggplot(PAC_model_data %>% 
+  filter(!is.na(Δ13C)), aes(x = pc1, y = Δ13C, color = Genotype)) +
+  geom_point() +
+  labs(x = "PC1", 
+       y = "δ13C",
+      title = " ") +
+  scale_color_fish_d(option = "Coryphaena_hippurus", direction = -1) +
+  theme_minimal()+
+  theme(legend.position="none",
+        plot.background = element_rect(fill = "white")) +
+  guides(color = "none", shape = "none") 
+
+pac_13C_raw
+
+ggsave("output/pac_13C_nutrientpca_raw.png",pac_13C_raw, height = 5, width = 5.5)
 ```
 
 #### Linear model:
@@ -354,6 +542,22 @@ SI_PRU_model_data <- PRU_model_data %>%
   filter(!is.na(Δ13C))
 ggplot(data = SI_PRU_model_data, (aes(y=Δ13C, x= pc1))) +
          geom_point()
+
+pru_13C_raw <- ggplot(PRU_model_data %>% 
+  filter(!is.na(Δ13C)), aes(x = pc1, y = Δ13C, color = Genotype)) +
+  geom_point() +
+  labs(x = "PC1", 
+       y = "δ13C",
+      title = " ") +
+  scale_color_fish_d(option = "Coryphaena_hippurus", direction = -1) +
+  theme_minimal()+
+  theme(legend.position="none",
+        plot.background = element_rect(fill = "white")) +
+  guides(color = "none", shape = "none") 
+
+pru_13C_raw
+
+ggsave("output/pru_13C_nutrientpca_raw.png",pru_13C_raw, height = 5, width = 5.5)
 ```
 
 #### Linear model:
@@ -385,6 +589,22 @@ SI_PAC_model_data <- PAC_model_data %>%
   filter(!is.na(Δ15N))
 ggplot(data = SI_PAC_model_data, (aes(y=Δ15N, x= pc1))) +
          geom_point()
+
+pac_15N_raw <- ggplot(PAC_model_data %>% 
+  filter(!is.na(Δ13C)), aes(x = pc1, y = Δ13C, color = Genotype)) +
+  geom_point() +
+  labs(x = "PC1", 
+       y = "δ15N",
+      title = " ") +
+  scale_color_fish_d(option = "Coryphaena_hippurus", direction = -1) +
+  theme_minimal()+
+  theme(legend.position="none",
+        plot.background = element_rect(fill = "white")) +
+  guides(color = "none", shape = "none") 
+
+pac_15N_raw
+
+ggsave("output/pac_15N_nutrientpca_raw.png",pac_15N_raw, height = 5, width = 5.5)
 ```
 
 #### Linear model:
@@ -413,6 +633,22 @@ SI_PRU_model_data <- PRU_model_data %>%
   filter(!is.na(Δ15N))
 ggplot(data = SI_PRU_model_data, (aes(y=Δ15N, x= pc1))) +
          geom_point()
+
+pru_15N_raw <- ggplot(PRU_model_data %>% 
+  filter(!is.na(Δ13C)), aes(x = pc1, y = Δ13C, color = Genotype)) +
+  geom_point() +
+  labs(x = "PC1", 
+       y = "δ15N",
+      title = " ") +
+  scale_color_fish_d(option = "Coryphaena_hippurus", direction = -1) +
+  theme_minimal()+
+  theme(legend.position="none",
+        plot.background = element_rect(fill = "white")) +
+  guides(color = "none", shape = "none") 
+
+pru_15N_raw
+
+ggsave("output/pru_15N_nutrientpca_raw.png",pru_15N_raw, height = 5, width = 5.5)
 ```
 
 #### Linear model:

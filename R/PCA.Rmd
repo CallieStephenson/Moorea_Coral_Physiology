@@ -11,3 +11,105 @@ library(corrplot)
 library(ggplot2)
 ```
 
+```{r}
+#explanatory data
+all_nut <- read.csv("data/All_Nutrients_Processed.csv")
+nut_no_seep <- all_nut[all_nut$CowTagID != 'VSEEP',]
+```
+
+## Building a PCA
+```{r}
+pulse_columns <- names(all_nut)[grepl("Low_Tide_Mean_", names(all_nut)) & 
+                            !grepl("Temperature|pH|Ammonia_umol|TA",names(all_nut))]
+nut_no_seep_scaled <- nut_no_seep %>%
+  mutate(across(all_of(pulse_columns), scale))
+```
+
+
+```{r}
+pulse_df <- as.data.frame(lapply(nut_no_seep_scaled[, c(pulse_columns)], as.numeric))
+cor_matrix <- cor(pulse_df)
+corrplot(cor_matrix, method = "number")
+chart.Correlation(pulse_df)
+```
+
+```{r}
+pca.data <- na.omit(nut_no_seep_scaled[, c(pulse_columns)]) 
+pca = princomp(pca.data, cor=TRUE)
+biplot(pca)
+```
+
+When I make a PCA of 
+```{r}
+names(pca.data)
+```
+
+we can explain 72.2% of the variation of these factors with 1 axis. 
+```{r}
+summary(pca)
+loadings(pca)
+```
+
+```{r}
+biplot(pca)
+```
+
+```{r autoplot}
+# pca_plot <- autoplot(pca, loadings = TRUE, loadings.colour = '#47c16e',
+#                       loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = '#47c16e') +
+#  labs(
+#     title = "Principal Component Analysis of Nutrient Data",
+#     x = "Principal Component 1 (72.249%)",
+#     y = "Principal Component 2 (15.019%)"
+#   ) +
+#   xlim(-2.5,4)+
+# #  scale_x_reverse(-0.5,0.5) +
+#   theme_minimal(base_size = 15) +  # Clean theme
+#   theme(
+#     plot.title = element_text(hjust = 0.5, size = 12, face = "bold"),  # Center title
+#     axis.title = element_text(size = 12)
+#   )
+# 
+# pca_plot
+#ggsave(pca_plot, filename = "PCA_Plot.png", dpi = 600, width = 7, height = 5)
+```
+
+```{r}
+scores <- as.data.frame(pca$scores)
+loadings <- as.data.frame(pca$loadings[, 1:2])  # First two components
+
+pca_plot <- ggplot(scores, aes(x = Comp.1, y = Comp.2)) +
+  geom_point() +
+  geom_segment(data = loadings, aes(x = 0, y = 0, xend = 3*Comp.1, yend = 3*Comp.2),
+               arrow = arrow(length = unit(0.2, "cm")), color = '#47c16e') +
+  geom_text(data = loadings, aes(x = 3*Comp.1, y = 3*Comp.2, label = rownames(loadings)),
+            color = '#47c16e', hjust = -0.2) +
+  labs(
+    title = "Principal Component Analysis of Nutrient Data",
+    x = "Principal Component 1",
+    y = "Principal Component 2"
+  ) +
+  theme_minimal(base_size = 15) +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 12, face = "bold"),
+    axis.title = element_text(size = 12)
+  )
+
+pca_plot
+#ggsave(pca_plot, filename = "PCA_Plot.png", dpi = 600, width = 7, height = 5)
+```
+
+```{r}
+sd_columns <- names(all_nut)[grepl("sd_", names(all_nut)) & !grepl("Phosphate_umolL|NN_umolL|Ammonia_umolL|NNP_umolL|Silicate_umolL",names(all_nut))]
+```
+
+```{r}
+nut_no_seep_scaled$pc1 = -1*(pca$scores[,1]) #what's this data's score on pc1 axis
+nut_no_seep$pc1 = -1*(pca$scores[,1]) #what's this data's score on pc1 axis
+```
+
+```{r}
+explan <- nut_no_seep[,c("CowTagID", "pc1", pulse_columns, sd_columns)]
+###### write.csv(explan, "data/explanatory_variables.csv")
+```
+
