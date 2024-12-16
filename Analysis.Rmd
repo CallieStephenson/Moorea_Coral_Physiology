@@ -1,0 +1,22 @@
+---
+title: "Analysis"
+author: "Callie Stephenson"
+date: "2024-12-03"
+output: html_document
+---
+
+load libraries
+```{r}
+library(dplyr)
+```
+
+load data
+```{r}
+response_data <- read.csv("data/T1_response_data.csv")
+```
+
+model data
+```{r}
+model_data <- left_join(response_data, nut_no_seep, by = join_by(CowTagID))
+```
+
