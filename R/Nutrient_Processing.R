@@ -216,7 +216,7 @@ Summarized_chem_data_wet <- Summarized_chem_data_wet[,c(2:46)]
 
 Summarized_chem_data_wet$Time <- "Wet"
 
-#write_csv(Summarized_chem_data, here("data","All_Nutrients_Processed.csv"))
+write_csv(Summarized_chem_data, here("data","All_Nutrients_Processed.csv"))
 #write_csv(Summarized_chem_data_wet, here("data","Wet_Nutrients_Processed.csv"))
 
 #nutrients2 <- left_join(mean_low_data, cv_chem_data, by = join_by(Location, CowTagID)) %>% 

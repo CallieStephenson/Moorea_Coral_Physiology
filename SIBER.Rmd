@@ -408,8 +408,8 @@ print(first.plot)
 annotations <- data.frame(
   community = c("Pocillopora acuta", "Porites rus" ),  # The facet variable
   label = c("40% SEAc = 21.94% \n 95% SEAc = 66.60%", "40% SEAc = 72.18% \n 95% SEAc = 92.69%"),  # Custom labels for each facet
-  x = c(-20, -20),  # X-position for the text (adjust as needed)
-  y = c(3.5, 3.5)   # Y-position for the text (adjust as needed)
+  x = c(-18, -18),  # X-position for the text (adjust as needed)
+  y = c(4.5, 4.5)   # Y-position for the text (adjust as needed)
 )
 annotation <- first.plot +
   geom_text(data = annotations, 
