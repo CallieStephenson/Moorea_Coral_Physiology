@@ -6,6 +6,7 @@ output: html_document
 editor_options: 
   chunk_output_type: console
 ---
+# Set-up
 intro to SIBER: https://cran.r-project.org/web/packages/SIBER/vignettes/Introduction-to-SIBER.html
 ```{r}
   # install.packages("devtools") # install if necessary
