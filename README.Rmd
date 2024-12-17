@@ -2,7 +2,7 @@
 title: "README"
 author: "Callie Stephenson"
 date: "2024-12-17"
-output: html_document
+output: github_document
 ---
 
 ```{r echo=FALSE, message=FALSE}
