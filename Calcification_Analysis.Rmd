@@ -13,6 +13,7 @@ library(effects)
 library(ggeffects)
 library(performance)
 library(ggpubr)
+library(lmerTest)
 ```
 
 
@@ -99,6 +100,7 @@ multivariate_PAC_growth <- lmer(Percent_Change ~ (sd_Temperature) + (sd_TA) + (s
 summary(multivariate_PAC_growth)
 car::Anova(multivariate_PAC_growth)
 plot(allEffects(multivariate_PAC_growth))
+anova(multivariate_PAC_growth)
 ```
 
 ```{r}

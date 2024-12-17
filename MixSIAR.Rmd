@@ -41,12 +41,26 @@ write_csv(PRU_Consumer_SI, here("data","PRU_MixSIAR_Consumer.csv"))
 ```
 
 ## Source
-```{r create source data}
+
+```{r}
 #Zoop_POM_SI <- read.csv("../data/SI_Zoop.csv")
 Zoop_POM_SI <- read.csv("data/SI_Zoop.csv")
 Zoop_POM_SI$del13C <- Zoop_POM_SI$δ13C............vs..VPDB.
 Zoop_POM_SI$del15N <- Zoop_POM_SI$δ15N...........vs..AIR.
 
+# Subset data for "Out" and run the t-test
+out_data <- Zoop_POM_SI %>% filter(Seep_Out == "Out")
+t_out <- t.test(del13C ~ POM_Zoop, data = out_data)
+print("T-test for POM Out vs Zoop Out:")
+print(t_out)
+
+seep_data <- Zoop_POM_SI %>% filter(Seep_Out == "Seep")
+t_seep <- t.test(del13C ~ POM_Zoop, data = seep_data)
+print("T-test for POM Seep vs Zoop Seep:")
+print(t_seep)
+```
+
+```{r create source data}
 ZP_Source <- Zoop_POM_SI %>% 
   mutate(X = paste(POM_Zoop, Seep_Out, sep= " ")) %>% 
   group_by(X) %>% 

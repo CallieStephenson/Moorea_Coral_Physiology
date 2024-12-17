@@ -1,0 +1,127 @@
+---
+title: "README"
+author: "Callie Stephenson"
+date: "2024-12-17"
+output: html_document
+---
+
+```{r echo=FALSE, message=FALSE}
+library(dplyr)
+library(tidyr)
+library(readr)
+library(curl)
+response_data <- read.csv("data/T1_response_data.csv")
+```
+
+# Pocillopora acuta response variables
+```{r echo=FALSE}
+PAC_summary_table <- response_data %>%
+  filter(Species == "Pocillopora acuta") %>%
+  summarise(across(c(Percent_Change, FSC.Events_per_cm_2, Chl_ug.cm.2, δ15N_host, δ15N_symb, 
+                     δ13C_host, δ13C_symb, Δ15N, Δ13C), 
+                   list(mean = ~mean(., na.rm = TRUE), 
+                        max = ~max(., na.rm = TRUE), 
+                        min = ~min(., na.rm = TRUE), 
+                        sd = ~sd(., na.rm = TRUE), 
+                        n = ~sum(!is.na(.))))) %>% 
+  pivot_longer(
+    cols = everything(),
+    names_to = c("Variable", "Stat"),
+    names_pattern = "(.*)_(mean|min|max|sd|n)", # Match all stats
+    values_to = "Value"
+  ) %>%
+  pivot_wider(
+    names_from = Stat,
+    values_from = Value
+  ) %>%
+  mutate(
+    mean = ifelse(Variable == "FSC.Events_per_cm_2", mean / 1e6, mean),
+    min = ifelse(Variable == "FSC.Events_per_cm_2", min / 1e6, min),
+    max = ifelse(Variable == "FSC.Events_per_cm_2", max / 1e6, max)
+  )
+
+PAC_summary_table
+```
+
+# Porites rus response variables
+```{r, echo=FALSE}
+PRU_summary_table <- response_data %>%
+  filter(Species == "Porites rus") %>%
+  summarise(across(c(Percent_Change, FSC.Events_per_cm_2, Chl_ug.cm.2, δ15N_host, δ15N_symb, 
+                     δ13C_host, δ13C_symb, Δ15N, Δ13C), 
+                   list(mean = ~mean(., na.rm = TRUE), 
+                        max = ~max(., na.rm = TRUE), 
+                        min = ~min(., na.rm = TRUE), 
+                        sd = ~sd(., na.rm = TRUE), 
+                        n = ~sum(!is.na(.))))) %>% 
+  pivot_longer(
+    cols = everything(),
+    names_to = c("Variable", "Stat"),
+    names_pattern = "(.*)_(mean|min|max|sd|n)", # Match all stats
+    values_to = "Value"
+  ) %>%
+  pivot_wider(
+    names_from = Stat,
+    values_from = Value
+  ) %>%
+  mutate(
+    mean = ifelse(Variable == "FSC.Events_per_cm_2", mean / 1e6, mean),
+    min = ifelse(Variable == "FSC.Events_per_cm_2", min / 1e6, min),
+    max = ifelse(Variable == "FSC.Events_per_cm_2", max / 1e6, max)
+  )
+
+PRU_summary_table
+```
+
+## Nutrient environment
+```{r, echo=FALSE, message=FALSE}
+chem_data <- read.csv("data/Raw_Water_Chemistry.csv") %>% 
+  filter(CowTagID != "VSEEP")
+```
+
+```{r echo=FALSE}
+nut_summary_table <- chem_data %>%
+  summarise(across(c(8:16), 
+                   list(mean = ~mean(., na.rm = TRUE), 
+                        max = ~max(., na.rm = TRUE), 
+                        min = ~min(., na.rm = TRUE), 
+                        sd = ~sd(., na.rm = TRUE), 
+                        n = ~sum(!is.na(.))))) %>% 
+  pivot_longer(
+    cols = everything(),
+    names_to = c("Variable", "Stat"),
+    names_pattern = "(.*)_(mean|min|max|sd|n)", # Match all stats
+    values_to = "Value"
+  ) %>% 
+  pivot_wider(
+    names_from = Stat,
+    values_from = Value
+  )
+
+nut_summary_table
+```
+
+## Just low tide
+```{r echo=FALSE}
+low_tide_nut_summary_table <- chem_data %>%
+  filter(Tide == "Low") %>% 
+  summarise(across(c(8:16), 
+                   list(mean = ~mean(., na.rm = TRUE), 
+                        max = ~max(., na.rm = TRUE), 
+                        min = ~min(., na.rm = TRUE), 
+                        sd = ~sd(., na.rm = TRUE), 
+                        n = ~sum(!is.na(.))))) %>% 
+  pivot_longer(
+    cols = everything(),
+    names_to = c("Variable", "Stat"),
+    names_pattern = "(.*)_(mean|min|max|sd|n)", # Match all stats
+    values_to = "Value"
+  ) %>% 
+  pivot_wider(
+    names_from = Stat,
+    values_from = Value
+  )
+
+low_tide_nut_summary_table
+```
+

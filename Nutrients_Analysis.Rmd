@@ -9,7 +9,6 @@ output: html_document
 load libraries
 ```{r}
 library(dplyr)
-library(lme4)
 library(car)
 library(ggplot2)
 library(fishualize)
@@ -17,6 +16,9 @@ library(corrplot)
 library(PerformanceAnalytics)
 library(performance)
 library(MuMIn)
+library(ggeffects)
+library(lmerTest)
+library(glmnet)
 ```
 
 ggplot theme
@@ -185,10 +187,10 @@ ggsave("output/pac_growth_nutrientpca_raw.png",pac_growth_raw, height = 5, width
 
 ### linear
 ```{r}
-linear_growth_model_pac <- lmer(Percent_Change ~ pc1 +
+linear_growth_model_pac <- lmerTest::lmer(Percent_Change ~ pc1 +
                                   (1|Genotype) + (1|Cage_Uncaged), data = PAC_model_data)
 #check_model(linear_growth_model_pac)
-#summary(linear_growth_model_pac)
+summary(linear_growth_model_pac)
 Anova(linear_growth_model_pac)
 ```
 
@@ -225,10 +227,11 @@ ggsave("output/pru_growth_nutrientpca_raw.png",pru_growth_raw, height = 5, width
 
 ### linear
 ```{r}
-linear_growth_model_pru <- lmer(Percent_Change ~ pc1 +
+linear_growth_model_pru <- lmerTest::lmer(Percent_Change ~ pc1 +
                                   (1|Genotype) + (1|Cage_Uncaged), data = PRU_model_data)
 #check_model(linear_growth_model_pru)
 Anova(linear_growth_model_pru)
+summary(linear_growth_model_pru)
 ```
 
 We do not find support for pc1 affecting growth of Porites rus in a linear fashion
@@ -885,3 +888,9 @@ ggplot() +
        y = "Δ15N") +
   theme_minimal()
 ```
+
+
+```{r}
+PAC_model_data
+```
+
