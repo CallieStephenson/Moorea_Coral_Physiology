@@ -19,6 +19,7 @@ library(MuMIn)
 library(ggeffects)
 library(lmerTest)
 library(glmnet)
+library(ggstats)
 ```
 
 ggplot theme
@@ -50,7 +51,8 @@ PAC_model_data <- model_data %>%
 
 PRU_model_data <- model_data %>%
   filter(Species == "Porites rus", !is.na(Pin_Number)) %>% 
-  mutate(pc1 = -1*pc1)
+  mutate(pc1 = -1*pc1)%>%
+  mutate(Percent_Change = if_else(Placement_Code == "PRU V13 A", NA_real_, Percent_Change))
 
 PRU_model_data_caged_only <- PRU_model_data %>% 
   filter(Cage_Uncaged == "C")
@@ -185,10 +187,35 @@ pac_growth_raw
 ggsave("output/pac_growth_nutrientpca_raw.png",pac_growth_raw, height = 5, width = 5.5)
 ```
 
+### test for influence of cage
+```{r}
+ggplot(PAC_model_data, aes(x = Cage_Uncaged, y = Percent_Change, fill = Cage_Uncaged)) +
+  geom_boxplot() +
+  geom_jitter(aes(shape = Genotype, alpha = 0.8))+
+  scale_fill_fish_d(option = "Acanthurus_olivaceus", alpha = 0.8, begin = 0.3, end = 1)
+
+cage_effect_growth <- lm(formula = Percent_Change ~ Cage_Uncaged, data = PAC_model_data)
+summary(cage_effect_growth)
+check_model(cage_effect_growth)
+
+cage_effect_growth_plot <- ggeffect(cage_effect_growth) %>% 
+  plot(show_data = TRUE, alpha=0.01, jitter = TRUE, color = "darkblue")
+```
+
+### test for influence of genoytpe
+```{r}
+genotype_effect_growth <- lm(formula = Percent_Change ~ Genotype, data = PAC_model_data)
+summary(genotype_effect_growth)
+
+genotype_effect_growth_plot <- ggeffect(genotype_effect_growth) %>% 
+  plot(show_data = TRUE, alpha=0.01, jitter = TRUE, color = "darkblue")
+genotype_effect_growth_plot
+```
+
 ### linear
 ```{r}
 linear_growth_model_pac <- lmerTest::lmer(Percent_Change ~ pc1 +
-                                  (1|Genotype) + (1|Cage_Uncaged), data = PAC_model_data)
+                                  (1|Genotype), data = PAC_model_data)
 #check_model(linear_growth_model_pac)
 summary(linear_growth_model_pac)
 Anova(linear_growth_model_pac)
@@ -225,6 +252,27 @@ pru_growth_raw
 ggsave("output/pru_growth_nutrientpca_raw.png",pru_growth_raw, height = 5, width = 5.5)
 ```
 
+### test for influence of cage
+```{r}
+ggplot(PRU_model_data, aes(x = Cage_Uncaged, y = Percent_Change, fill = Cage_Uncaged)) +
+  geom_boxplot() +
+  geom_text(label = PRU_model_data$Pin_Number)+
+  geom_jitter(aes(shape = Genotype, alpha = 0.8))+
+  scale_fill_fish_d(option = "Acanthurus_olivaceus", alpha = 0.8, begin = 0.3, end = 1)
+
+cage_effect_growth <- lm(formula = Percent_Change ~ Cage_Uncaged, data = PRU_model_data)
+summary(cage_effect_growth)
+check_model(cage_effect_growth)
+
+ggcoef_model(cage_effect_growth)
+```
+
+### test for influence of genoytpe
+```{r}
+genotype_effect_growth <- lm(formula = Percent_Change ~ Genotype, data = PRU_model_data)
+summary(genotype_effect_growth)
+ggcoef_model(genotype_effect_growth)
+```
 ### linear
 ```{r}
 linear_growth_model_pru <- lmerTest::lmer(Percent_Change ~ pc1 +
@@ -273,6 +321,7 @@ When only looking at caged samples, we still don't find any influence of PC1 on 
 
 ## Pocillopora acuta
 
+### plot raw
 ```{r}
 pac_symb_raw <- ggplot(PAC_model_data, aes(x = pc1, y = log10(FSC.Events_per_cm_2), color = Genotype, shape = Cage_Uncaged)) +
   geom_point() +
@@ -289,7 +338,24 @@ pac_symb_raw
 
 ggsave("output/pac_symb_nutrientpca_raw.png",pac_symb_raw, height = 5, width = 5.5)
 ```
+### test for influence of cage
+```{r}
+ggplot(PAC_model_data, aes(x = Cage_Uncaged, y = log10(FSC.Events_per_cm_2), fill = Cage_Uncaged)) +
+  geom_boxplot() +
+  geom_jitter(aes(shape = Genotype, alpha = 0.8))+
+  scale_fill_fish_d(option = "Acanthurus_olivaceus", alpha = 0.8, begin = 0.3, end = 1)
 
+cage_effect_symb <- lm(formula = log10(FSC.Events_per_cm_2) ~ Cage_Uncaged, data = PAC_model_data)
+summary(cage_effect_symb)
+check_model(cage_effect_symb)
+```
+
+### test for influence of genoytpe
+```{r}
+genotype_effect_symb <- lm(formula = log10(FSC.Events_per_cm_2) ~ Genotype, data = PAC_model_data)
+summary(genotype_effect_symb)
+ggcoef_model(genotype_effect_symb)
+```
 ### linear model
 ```{r}
 linear_symb_model_pac <- lmer(log10(FSC.Events_per_cm_2) ~ pc1 +
@@ -329,6 +395,38 @@ pru_symb_raw
 ggsave("output/pru_symb_nutrientpca_raw.png",pru_symb_raw, height = 5, width = 5.5)
 ```
 
+### test for influence of cage
+```{r}
+ggplot(PRU_model_data, aes(x = Cage_Uncaged, y = log10(FSC.Events_per_cm_2), fill = Cage_Uncaged)) +
+  geom_boxplot() +
+  geom_jitter(aes(shape = Genotype, alpha = 0.8))+
+  scale_fill_fish_d(option = "Acanthurus_olivaceus", alpha = 0.8, begin = 0.3, end = 1)
+
+cage_effect_symb <- lm(formula = log10(FSC.Events_per_cm_2) ~ Cage_Uncaged, data = PRU_model_data)
+summary(cage_effect_symb)
+check_model(cage_effect_symb)
+
+ggcoef_model(cage_effect_symb)
+```
+No cage effect
+### test for influence of genoytpe
+```{r}
+genotype_effect_symb <- lm(formula = log10(FSC.Events_per_cm_2) ~ Genotype, data = PRU_model_data)
+summary(genotype_effect_symb)
+ggcoef_model(genotype_effect_symb)
+
+genotype_effect_symb_plot <- ggeffect(genotype_effect_symb) %>% 
+  plot(show_data = TRUE, alpha=0.01, jitter = TRUE, color = "darkblue")
+```
+One genotpe is significantly lower than others.
+
+### linear model
+```{r}
+linear_symb_model_pac <- lmer(log10(FSC.Events_per_cm_2) ~ pc1 +
+                                  (1|Genotype) + (1|Cage_Uncaged), data = PAC_model_data)
+#check_model(linear_symb_model_pac)
+Anova(linear_symb_model_pac)
+```
 ### linear model:
 
 ```{r}
@@ -374,6 +472,7 @@ This model does not support the hypothesis that nutrients from SGD contribute to
 # Chlorophyll
 
 ## Pocillopora acuta
+### check raw
 ```{r}
 pac_chl_raw <- ggplot(PAC_model_data, aes(x = pc1, y = Chl_ug.cm.2, color = Genotype, shape = Cage_Uncaged)) +
   geom_point() +
@@ -391,6 +490,34 @@ pac_chl_raw
 
 ggsave("output/pac_chl_nutrientpca_raw.png",pac_chl_raw, height = 5, width = 5.5)
 ```
+
+### test for influence of cage
+```{r}
+ggplot(PAC_model_data, aes(x = Cage_Uncaged, y = Chl_ug.cm.2, fill = Cage_Uncaged)) +
+  geom_boxplot() +
+  geom_text(label = PAC_model_data$Pin_Number)+
+  geom_jitter(aes(shape = Genotype, alpha = 0.8))+
+  scale_fill_fish_d(option = "Acanthurus_olivaceus", alpha = 0.8, begin = 0.3, end = 1)
+
+cage_effect_chla <- lm(formula = Chl_ug.cm.2 ~ Cage_Uncaged, data = PAC_model_data)
+summary(cage_effect_chla)
+check_model(cage_effect_chla)
+
+cage_effect_chla_plot <- ggeffect(cage_effect_chla) %>% 
+  plot(show_data = TRUE, alpha=0.01, jitter = TRUE, color = "darkblue")
+cage_effect_chla_plot
+
+ggcoef_model(cage_effect_chla)
+```
+No cage effect
+
+### test for influence of genoytpe
+```{r}
+genotype_effect_growth <- lm(formula = Chl_ug.cm.2 ~ Genotype, data = PAC_model_data)
+summary(genotype_effect_growth)
+ggcoef_model(genotype_effect_growth)
+```
+One genotype (PA 18) faired better than the others
 
 ```{r}
 linear_chl_model_pac <- lmer(Chl_ug.cm.2 ~ pc1 +
@@ -648,6 +775,29 @@ plot_chl <- ggplot() +
            hjust = 1.1, vjust = 1, size = 3)
 ```
 
+```{r}
+linear_chl_pac_growth <- lmer(Percent_Change ~ Chl_ug.cm.2 +
+                                  (1|Genotype) + (1|Cage_Uncaged), data = PAC_model_data)
+
+plot_chl_growth <- ggplot() +
+  # Raw data points
+  geom_point(data = PAC_model_data, 
+             aes(x = Chl_ug.cm.2, y = Percent_Change,
+                 color= Genotype, shape = Cage_Uncaged)) +
+  labs(
+    y = "Percent Change in Buoyant Weight",
+    x = expression(paste("Chlorophyll density (μg ", cm^2, ")"))
+  ) +
+  scale_color_fish_d(option = "Coryphaena_hippurus", direction = -1)+
+  custom_theme+
+  annotate("text", y = 1, x = 1, 
+           label = "p =0.1516", 
+           hjust = 1.1, vjust = 1, size = 3)
+
+
+
+```
+
 
 ## Porites rus
 ```{r}
@@ -667,6 +817,33 @@ pru_chl_raw
 ggsave("output/pru_chl_nutrientpca_raw.png",pru_chl_raw, height = 5, width = 5.5)
 ```
 
+### test for influence of cage
+```{r}
+ggplot(PRU_model_data, aes(x = Cage_Uncaged, y = Chl_ug.cm.2, fill = Cage_Uncaged)) +
+  geom_boxplot() +
+  geom_text(label = PRU_model_data$Pin_Number)+
+  geom_jitter(aes(shape = Genotype, alpha = 0.8))+
+  scale_fill_fish_d(option = "Acanthurus_olivaceus", alpha = 0.8, begin = 0.3, end = 1)
+
+cage_effect_chla <- lm(formula = Chl_ug.cm.2 ~ Cage_Uncaged, data = PRU_model_data)
+summary(cage_effect_chla)
+check_model(cage_effect_chla)
+
+cage_effect_chla_plot <- ggeffect(cage_effect_chla) %>% 
+  plot(show_data = TRUE, alpha=0.01, jitter = TRUE, color = "darkblue")
+cage_effect_chla_plot
+
+ggcoef_model(cage_effect_chla)
+```
+I can't tell you why, but there is a cage effect here...
+
+### test for influence of genoytpe
+```{r}
+genotype_effect_growth <- lm(formula = Chl_ug.cm.2 ~ Genotype, data = PRU_model_data)
+summary(genotype_effect_growth)
+ggcoef_model(genotype_effect_growth)
+```
+### linear
 ```{r}
 linear_chl_model_pru <- lmer(Chl_ug.cm.2 ~ pc1 +
                                   (1|Genotype) + (1|Cage_Uncaged), data = PRU_model_data)
@@ -674,6 +851,7 @@ linear_chl_model_pru <- lmer(Chl_ug.cm.2 ~ pc1 +
 Anova(linear_chl_model_pru)
 ```
 
+### polynomial
 ```{r}
 polynomial_chl_model_pru <- lmer(Chl_ug.cm.2 ~ poly(pc1, 2) +
                                   (1|Genotype) + (1|Cage_Uncaged), data = PRU_model_data)
