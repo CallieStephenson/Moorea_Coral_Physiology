@@ -740,7 +740,47 @@ plot_chl_NNP <- ggplot() +
 ggsave("output/pac_chl_NNP_mod.png", plot_chl_NNP, height = 5, width = 5.5)
 ```
 
+### Caged only linear
+```{r}
+linear_chl_model_pac_caged <- lmer(Chl_ug.cm.2 ~ pc1 +
+                                  (1|Genotype), data = PAC_model_data %>% filter(Cage_Uncaged == "C"))
+#check_model(linear_growth_model_pac)
+Anova(linear_chl_model_pac_caged)
+r2_values_caged <- r.squaredGLMM(linear_chl_model_pac_caged)
+marginal_r2_caged <- r2_values[1]  # Marginal R^2
+conditional_r2_caged <- r2_values[2]
+```
 
+```{r}
+pred_chl <- ggpredict(linear_chl_model_pac_caged, terms = "pc1")
+
+#annnotations
+anova_results <- car::Anova(linear_chl_model_pac_caged)
+p_values <- anova_results$`Pr(>Chisq)`[1]  # Adjust index based on your model's fixed effects
+names(p_values) <- rownames(anova_results)[1] 
+
+plot_chl_caged <- ggplot() +
+  # Raw data points
+  geom_point(data = PAC_model_data%>% filter(Cage_Uncaged == "C"), 
+             aes(x = pc1, y = Chl_ug.cm.2), color = "grey50", alpha = 0.6) +
+  # Prediction line with confidence interval
+  geom_line(data = pred_chl, aes(x = x, y = predicted), color = "#21908c") +
+  geom_ribbon(data = pred_chl, aes(x = x, ymin = conf.low, ymax = conf.high), 
+              fill = "#21908c", alpha = 0.2) +
+  scale_y_continuous(limits = c(0,4.5)) +
+  labs(
+    x = "PC1",
+    y = expression(paste("Chlorophyll density (μg ", cm^2, ")"))
+  ) +
+  custom_theme+
+  annotate("text", y = 0.5, x = max(pred_chl$x, na.rm = TRUE), 
+         label = paste("p =", round(p_values["pc1"], 6), 
+                       "\nMarginal R² =", round(marginal_r2_caged, 3), 
+                       "\nConditional R² =", round(conditional_r2_caged, 3)), 
+         hjust = 1.1, vjust = 1, size = 3)
+```
+
+### Polynomial
 ```{r}
 polynomial_chl_model_pac <- lmer(Chl_ug.cm.2 ~ poly(pc1, 2) +
                                   (1|Genotype) + (1|Cage_Uncaged), data = PAC_model_data)
