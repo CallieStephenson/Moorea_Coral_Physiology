@@ -62,6 +62,27 @@ Therefore, we will use the LASSO method, which can do variable selection with sh
 ## Growth
 
 ### P acuta
+```{r}
+linear_growth_model_pac <- lmer(Percent_Change ~ sd_TA +
+                                  (1|Genotype), data = PAC_model_data)
+#check_model(linear_growth_model_pru_c)
+Anova(linear_growth_model_pac)
+AIC(linear_growth_model_pac)
+
+linear_growth_model_pac <- lmer(Percent_Change ~ sd_pH +
+                                  (1|Genotype), data = PAC_model_data)
+#check_model(linear_growth_model_pru_c)
+Anova(linear_growth_model_pac)
+AIC(linear_growth_model_pac)
+
+linear_growth_model_pac <- lmer(Percent_Change ~ sd_pH + sd_TA +
+                                  (1|Genotype), data = PAC_model_data)
+#check_model(linear_growth_model_pru_c)
+Anova(linear_growth_model_pac)
+AIC(linear_growth_model_pac)
+```
+
+
 ```{r PAC lasso}
 # Remove the Pin_Number and Species columns
 PAC_lasso <- PAC_model_data[,c("Percent_Change","Cage_Uncaged","Genotype","sd_TA", "sd_pH", "sd_Salinity", "sd_Temperature")] %>% 

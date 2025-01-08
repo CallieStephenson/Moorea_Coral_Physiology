@@ -113,3 +113,15 @@ explan <- nut_no_seep[,c("CowTagID", "pc1", pulse_columns, sd_columns)]
 ###### write.csv(explan, "data/explanatory_variables.csv")
 ```
 
+# What if we take the N/P Ratio out of it (NS Suggestion)
+```{r}
+pulse_columns_2 <- pulse_columns[1:4]
+chart.Correlation(pulse_df_2)
+```
+
+```{r}
+pca.data <- na.omit(nut_no_seep_scaled[, c(pulse_columns_2)]) 
+pca = princomp(pca.data, cor=TRUE)
+biplot(pca)
+```
+

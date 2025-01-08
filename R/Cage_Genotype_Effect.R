@@ -53,7 +53,11 @@ for (sp in species) {
 
 genotype_models_table
 
-#Since one is significant, let's look at what is different from each other:
+#Since two are significant, let's look at what is different from each other:
+pairwise <- emmeans(genotype_models[["Pocillopora acuta"]][["Percent_Change"]], pairwise ~ Genotype) #pull out significant model
+pairwisedf <- as.data.frame(pairwise$contrasts) #make the p.values a data frame
+pairwisedf %>% filter(p.value < 0.05) #filter for only the significant ones
+
 pairwise <- emmeans(genotype_models[["Pocillopora acuta"]][["Chl_ug.cm.2"]], pairwise ~ Genotype) #pull out significant model
 pairwisedf <- as.data.frame(pairwise$contrasts) #make the p.values a data frame
 pairwisedf %>% filter(p.value < 0.05) #filter for only the significant ones
