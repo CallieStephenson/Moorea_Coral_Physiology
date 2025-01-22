@@ -11,6 +11,7 @@ all_nut <- read.csv("data/All_Nutrients_Processed.csv")
 
 
 model_data <- left_join(response_data, explanatory_variables, by = join_by(CowTagID))
+model_data$Genotype <- as.factor(model_data$Genotype)
 
 ### Cage Effect
 species <- unique(model_data$Species)
@@ -20,8 +21,8 @@ cage_models_table <- data.frame()
 
 for (sp in species) {
   for (response in responses) {
-    formula <- as.formula(paste(response, "~ Cage_Uncaged"))
-    model <- lm(formula = formula, data = model_data %>% filter(Species == sp))
+    formula <- as.formula(paste(response, "~ Cage_Uncaged + (1|Genotype) + (1|Pin_Number)"))
+    model <- lmer(formula = formula, data = model_data %>% filter(Species == sp))
     cage_models[[response]] <- model
     anova_results <- anova(model)
     p_value <- anova_results$`Pr(>F)`[1]
@@ -41,8 +42,8 @@ genotype_models_table <- data.frame()
 for (sp in species) {
   genotype_models[[sp]] <- list()
   for (response in responses) {
-    formula <- as.formula(paste(response, "~ Genotype"))
-    model <- lm(formula = formula, data = model_data %>% filter(Species == sp))
+    formula <- as.formula(paste(response, "~ Genotype + (1|Cage_Uncaged) + (1|Pin_Number)"))
+    model <- lmer(formula = formula, data = model_data %>% filter(Species == sp))
     genotype_models[[sp]][[response]] <- model
     anova_results <- anova(model)
     p_value <- anova_results$`Pr(>F)`[1]

@@ -4,7 +4,7 @@ author: "Callie Stephenson"
 date: "2024-12-03"
 output: html_document
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 # Set-up
 
@@ -639,33 +639,33 @@ print(results)
 #### LASSO
 P acuta ~ PC 1 Axes
 ```{r PAC lasso}
-# Remove the Pin_Number and Species columns
-PAC_lasso <- PAC_model_data[,c("Chl_ug.cm.2", "Genotype", "Cage_Uncaged", pulse_columns)] %>% 
-  mutate(Low_Tide_Mean_Salinity = scale(Low_Tide_Mean_Salinity))%>% 
-  mutate(Low_Tide_Mean_Phosphate_umolL = scale(Low_Tide_Mean_Phosphate_umolL))%>% 
-  mutate(Low_Tide_Mean_Silicate_umolL = scale(Low_Tide_Mean_Silicate_umolL)) %>% 
-  mutate(Low_Tide_Mean_NN_umolL = scale(Low_Tide_Mean_NN_umolL)) %>%
-  mutate(Low_Tide_Mean_NNP_umolL = scale(Low_Tide_Mean_NNP_umolL))
-
-# Convert Genotype and Cage_Uncaged to factors if they are not already
-PAC_lasso$Genotype <- as.factor(PAC_lasso$Genotype)
-PAC_lasso$Cage_Uncaged <- as.factor(PAC_lasso$Cage_Uncaged)
-
-# Create dummy variables
-genotype_dummies <- model.matrix( ~ Genotype - 1, data = PAC_lasso)
-cage_uncaged_dummies <- model.matrix( ~ Cage_Uncaged - 1, data = PAC_lasso)
-
-# Combine the dummy variables with the original data frame (excluding the original columns)
-PAC_lasso <- cbind(PAC_lasso, genotype_dummies, cage_uncaged_dummies)
-PAC_lasso <- PAC_lasso[, !names(PAC_lasso) %in% c("Genotype", "Cage_Uncaged")]
-
-#lasso works on matrix
-PAC_model_data_matrix <- as.matrix(PAC_lasso)
-
-x_pac_percent_change <- PAC_model_data_matrix[, -1]
-y_pac_percent_change <- PAC_model_data_matrix[, 1]
-lasso_PAC_growth <- cv.glmnet(x = x_pac_percent_change, y = y_pac_percent_change)
-coef(lasso_PAC_growth)
+# # Remove the Pin_Number and Species columns
+# PAC_lasso <- PAC_model_data[,c("Chl_ug.cm.2", "Genotype", "Cage_Uncaged", pulse_columns)] %>% 
+#   mutate(Low_Tide_Mean_Salinity = scale(Low_Tide_Mean_Salinity))%>% 
+#   mutate(Low_Tide_Mean_Phosphate_umolL = scale(Low_Tide_Mean_Phosphate_umolL))%>% 
+#   mutate(Low_Tide_Mean_Silicate_umolL = scale(Low_Tide_Mean_Silicate_umolL)) %>% 
+#   mutate(Low_Tide_Mean_NN_umolL = scale(Low_Tide_Mean_NN_umolL)) %>%
+#   mutate(Low_Tide_Mean_NNP_umolL = scale(Low_Tide_Mean_NNP_umolL))
+# 
+# # Convert Genotype and Cage_Uncaged to factors if they are not already
+# PAC_lasso$Genotype <- as.factor(PAC_lasso$Genotype)
+# PAC_lasso$Cage_Uncaged <- as.factor(PAC_lasso$Cage_Uncaged)
+# 
+# # Create dummy variables
+# genotype_dummies <- model.matrix( ~ Genotype - 1, data = PAC_lasso)
+# cage_uncaged_dummies <- model.matrix( ~ Cage_Uncaged - 1, data = PAC_lasso)
+# 
+# # Combine the dummy variables with the original data frame (excluding the original columns)
+# PAC_lasso <- cbind(PAC_lasso, genotype_dummies, cage_uncaged_dummies)
+# PAC_lasso <- PAC_lasso[, !names(PAC_lasso) %in% c("Genotype", "Cage_Uncaged")]
+# 
+# #lasso works on matrix
+# PAC_model_data_matrix <- as.matrix(PAC_lasso)
+# 
+# x_pac_percent_change <- PAC_model_data_matrix[, -1]
+# y_pac_percent_change <- PAC_model_data_matrix[, 1]
+# lasso_PAC_growth <- cv.glmnet(x = x_pac_percent_change, y = y_pac_percent_change)
+# coef(lasso_PAC_growth)
 ```
 
 #### Plots
@@ -1029,7 +1029,33 @@ linear_nitrogen_model_pac <- lmer(Δ15N ~ pc1 +
 #summary(linear_nitrogen_model_pac)
 Anova(linear_nitrogen_model_pac)
 ```
-Not significant
+HIGHLY Significant!!!
+
+```{r}
+prediction_data <- data.frame(pc1 = seq(min(SI_PAC_model_data$pc1), 
+                                   max(SI_PAC_model_data$pc1), 
+                                   length.out = 100))
+# Add predicted values to the dataframe using the model without random effects
+predictions <- predict(linear_nitrogen_model_pac, newdata = prediction_data, re.form = NA, se.fit = TRUE)
+
+#Add to new_data
+prediction_data <- prediction_data %>%
+  mutate(fit = predictions$fit,
+         se.fit = predictions$se.fit,
+         lower = fit - 1.96 * se.fit,  # 95% CI lower
+         upper = fit + 1.96 * se.fit)   # 95% CI upper
+
+# Create the plot with the fitted line
+ggplot() +
+  geom_point(data = SI_PAC_model_data, aes(x = pc1, y = Δ15N), color = "grey") +
+  geom_line(data = prediction_data, aes(x = pc1, y = fit), color = "#21908c") +  # Add the fitted line
+  geom_ribbon(data = prediction_data, aes(x = pc1, ymin = lower, ymax = upper), alpha = 0.2, fill = "#21908c") +  # Add CI
+  labs(title = "Porites rus Δ15N (host minus symbiont, proxy for heterotrophy)",
+       x = "PC1",
+       y = "Δ15N") +
+  theme_minimal()
+```
+
 
 #### Polynomial model:
 ```{r}
@@ -1038,7 +1064,32 @@ polynomial_nitrogen_model_pac <- lmer(Δ15N ~ poly(pc1, 2) +
 #check_model(polynomial_nitrogen_model_pac)
 Anova(polynomial_nitrogen_model_pac)
 ```
-Not significant
+Significant
+
+```{r}
+prediction_data <- data.frame(pc1 = seq(min(SI_PAC_model_data$pc1), 
+                                   max(SI_PAC_model_data$pc1), 
+                                   length.out = 100))
+# Add predicted values to the dataframe using the model without random effects
+predictions <- predict(polynomial_nitrogen_model_pac, newdata = prediction_data, re.form = NA, se.fit = TRUE)
+
+#Add to new_data
+prediction_data <- prediction_data %>%
+  mutate(fit = predictions$fit,
+         se.fit = predictions$se.fit,
+         lower = fit - 1.96 * se.fit,  # 95% CI lower
+         upper = fit + 1.96 * se.fit)   # 95% CI upper
+
+# Create the plot with the fitted line
+ggplot() +
+  geom_point(data = SI_PAC_model_data, aes(x = pc1, y = Δ15N), color = "grey") +
+  geom_line(data = prediction_data, aes(x = pc1, y = fit), color = "#21908c") +  # Add the fitted line
+  geom_ribbon(data = prediction_data, aes(x = pc1, ymin = lower, ymax = upper), alpha = 0.2, fill = "#21908c") +  # Add CI
+  labs(title = "Porites rus Δ15N (host minus symbiont, proxy for heterotrophy)",
+       x = "PC1",
+       y = "Δ15N") +
+  theme_minimal()
+```
 
 ### Porites rus
 #### Exploratory plot:

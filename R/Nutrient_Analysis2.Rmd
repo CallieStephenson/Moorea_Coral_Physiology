@@ -60,7 +60,7 @@ nut_no_seep_scaled <- nut_no_seep %>%
 ```{r}
 nut_no_seep <- all_nut[all_nut$CowTagID != 'VSEEP',]
 pulse_columns <- names(all_nut)[grepl("Low_Tide_Mean_", names(all_nut)) &
-                            !grepl("Temperature|Ammonia_umol|NNP",names(all_nut))]
+                            !grepl("Temperature|Ammonia_umol|NNP|TA|pH",names(all_nut))]
 nut_no_seep_scaled <- nut_no_seep %>%
   mutate(across(all_of(pulse_columns), scale))
 ```
