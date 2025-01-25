@@ -5,7 +5,7 @@
 library(dplyr)
 library(emmeans)
 
-response_data <- read.csv("data/T1_response_data.csv")
+response_data <- read.csv("data/response_data.csv")
 explanatory_variables <- read.csv("data/explanatory_variables.csv")
 all_nut <- read.csv("data/All_Nutrients_Processed.csv")
 

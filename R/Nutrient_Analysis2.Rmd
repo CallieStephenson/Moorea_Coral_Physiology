@@ -4,7 +4,7 @@ author: "Callie Stephenson"
 date: "2024-12-03"
 output: html_document
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 Same markdown as before, but removing NNP ratio and adding TA
@@ -41,9 +41,9 @@ custom_theme <- theme_minimal(base_size = 10)+
 
 load data
 ```{r}
-response_data <- read.csv("data/T1_response_data.csv")
-explanatory_variables <- read.csv("data/explanatory_variables.csv")
-all_nut <- read.csv("data/All_Nutrients_Processed.csv")
+response_data <- read.csv("../data/response_data.csv")
+explanatory_variables <- read.csv("../data/explanatory_variables.csv")
+all_nut <- read.csv("../data/All_Nutrients_Processed.csv")
 ```
 
 # PCA
@@ -60,7 +60,7 @@ nut_no_seep_scaled <- nut_no_seep %>%
 ```{r}
 nut_no_seep <- all_nut[all_nut$CowTagID != 'VSEEP',]
 pulse_columns <- names(all_nut)[grepl("Low_Tide_Mean_", names(all_nut)) &
-                            !grepl("Temperature|Ammonia_umol|NNP|TA|pH",names(all_nut))]
+                            !grepl("Temperature|Ammonia_umol|NNP",names(all_nut))]
 nut_no_seep_scaled <- nut_no_seep %>%
   mutate(across(all_of(pulse_columns), scale))
 ```
@@ -490,7 +490,7 @@ random_effects <- "(1|Genotype) + (1|Cage_Uncaged)"
 # Define the predictors
 predictors <- c("Low_Tide_Mean_Salinity", "Low_Tide_Mean_NN_umolL", 
                 "Low_Tide_Mean_Phosphate_umolL", "Low_Tide_Mean_Silicate_umolL", 
-                "Low_Tide_Mean_TA")
+                "Low_Tide_Mean_TA", "Low_Tide_Mean_pH")
 
 # Initialize a results dataframe
 results <- data.frame(Variable = character(), 
@@ -1003,7 +1003,34 @@ linear_nitrogen_model_pac <- lmer(Δ15N ~ pc1 +
 #summary(linear_nitrogen_model_pac)
 Anova(linear_nitrogen_model_pac)
 ```
-Not significant
+Significant
+
+##### Significant model
+```{r}
+prediction_data <- data.frame(pc1 = seq(min(SI_PAC_model_data$pc1), 
+                                   max(SI_PAC_model_data$pc1), 
+                                   length.out = 100))
+# Add predicted values to the dataframe using the model without random effects
+predictions <- predict(linear_nitrogen_model_pac, newdata = prediction_data, re.form = NA, se.fit = TRUE)
+
+#Add to new_data
+prediction_data <- prediction_data %>%
+  mutate(fit = predictions$fit,
+         se.fit = predictions$se.fit,
+         lower = fit - 1.96 * se.fit,  # 95% CI lower
+         upper = fit + 1.96 * se.fit)   # 95% CI upper
+
+# Create the plot with the fitted line
+ggplot() +
+  geom_point(data = SI_PAC_model_data, aes(x = pc1, y = Δ15N), color = "grey") +
+  geom_line(data = prediction_data, aes(x = pc1, y = fit), color = "#21908c") +  # Add the fitted line
+  geom_ribbon(data = prediction_data, aes(x = pc1, ymin = lower, ymax = upper), alpha = 0.2, fill = "#21908c") +  # Add CI
+  labs(title = "Pocillopora acuta Δ15N (host minus symbiont, proxy for heterotrophy)",
+       x = "PC1",
+       y = "Δ15N") +
+  theme_minimal()
+```
+
 
 #### Polynomial model:
 ```{r}
@@ -1012,7 +1039,7 @@ polynomial_nitrogen_model_pac <- lmer(Δ15N ~ poly(pc1, 2) +
 #check_model(polynomial_nitrogen_model_pac)
 Anova(polynomial_nitrogen_model_pac)
 ```
-Not significant
+Significant
 
 ### Porites rus
 #### Exploratory plot:
