@@ -471,43 +471,6 @@ print(ellipse_with_pin)
 ```
 
 ## now trying to add in pc1 (might be a nightmare)
-```{r}
-pc1 <- read_csv("data/pc1.csv")
-
-
-SI_pc <- left_join(SI, pc1)
-ellipse_with_pc1 <- ggplot(data = SI_pc, aes(iso1, iso2)) +
-  geom_point(aes(color = pc1, shape = group), size = 2) +
-  ylab(expression(paste(delta^{15}, "N (\u2030)"))) +
-  xlab(expression(paste(delta^{13}, "C (\u2030)"))) + 
-  theme(text = element_text(size=15)) +
-  facet_grid(~Species) +
-  theme_minimal() +
-  theme(strip.text = element_text(face = "italic", size=18),
-        legend.position = "bottom",
-        plot.background = element_rect(fill = "white")) + 
-  stat_ellipse(aes(group = interaction(Species, HS),
-                   fill = HS,
-                   color = HS),
-               alpha = 0,
-               level = 0.95,
-               type = "norm",
-               geom = "polygon",
-               linetype = "dotted") +
-  stat_ellipse(aes(group = interaction(Species, HS),
-                   fill = HS,
-                   color = HS),
-               alpha = 0.2,
-               level = p.ell,
-               type = "norm",
-               geom = "polygon") +
-  scale_color_viridis_c() +  # Continuous scale for points
-  scale_fill_manual(values = c("Host" = "#440154FF", "Symbiont" = "#21908DFF")) +
-  scale_color_manual(values = c("Host" = "#440154FF", "Symbiont" = "#21908DFF")) +
-  scale_shape(labels = c("Host", "Symbiont"))+
-  labs(color = " ", fill = " ", shape = " ")  # Update both color and fill legends
-print(ellipse_with_pc1)
-```
 
 ```{r}
 ellipse_with_pc1 <- ggplot(data = SI_pc, aes(iso1, iso2)) +
@@ -528,8 +491,8 @@ ellipse_with_pc1 <- ggplot(data = SI_pc, aes(iso1, iso2)) +
                type = "norm",
                geom = "polygon") +
   scale_color_viridis_c() +  # Continuous color scale for pc1
-  scale_fill_manual(values = c("Host" = "#440154FF", "Symbiont" = "#21908DFF")) + 
-  scale_shape(labels = c("Host", "Symbiont")) +
+  scale_fill_manual(values = c("H" = "#440154FF", "S" = "#21908DFF")) + 
+  scale_shape(labels = c("H", "S")) +
   labs(color = "PC1 Value", fill = "Group", shape = " ") +
   theme_minimal() +
   theme(
@@ -539,7 +502,6 @@ ellipse_with_pc1 <- ggplot(data = SI_pc, aes(iso1, iso2)) +
   )
 
 print(ellipse_with_pc1)
-
 ```
 
 # Hotelling

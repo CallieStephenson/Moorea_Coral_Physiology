@@ -16,16 +16,17 @@ library(ggplot2)
 all_nut <- read.csv("data/All_Nutrients_Processed.csv")
 nut_no_seep <- all_nut[all_nut$CowTagID != 'VSEEP',]
 ```
-
-## Building a PCA
+# PCA
+Remove seep:
 ```{r}
+nut_no_seep <- all_nut[all_nut$CowTagID != 'VSEEP',]
 pulse_columns <- names(all_nut)[grepl("Low_Tide_Mean_", names(all_nut)) & 
-                            !grepl("Temperature|pH|Ammonia_umol|TA",names(all_nut))]
+                            !grepl("Temperature|Ammonia_umol|NNP",names(all_nut))]
 nut_no_seep_scaled <- nut_no_seep %>%
   mutate(across(all_of(pulse_columns), scale))
 ```
 
-
+Look at correlation between variables:
 ```{r}
 pulse_df <- as.data.frame(lapply(nut_no_seep_scaled[, c(pulse_columns)], as.numeric))
 cor_matrix <- cor(pulse_df)
@@ -33,18 +34,18 @@ corrplot(cor_matrix, method = "number")
 chart.Correlation(pulse_df)
 ```
 
+PCA:
 ```{r}
 pca.data <- na.omit(nut_no_seep_scaled[, c(pulse_columns)]) 
 pca = princomp(pca.data, cor=TRUE)
-biplot(pca)
 ```
 
-When I make a PCA of 
+When we make a PCA of 
 ```{r}
 names(pca.data)
 ```
 
-we can explain 72.2% of the variation of these factors with 1 axis. 
+we can explain 67.5% of the variation of these factors with 1 axis. 
 ```{r}
 summary(pca)
 loadings(pca)
@@ -75,17 +76,24 @@ biplot(pca)
 ```
 
 ```{r}
+#derive scores and loadings from the pca
 scores <- as.data.frame(pca$scores)
-loadings <- as.data.frame(pca$loadings[, 1:2])  # First two components
+loadings <- as.data.frame(pca$loadings[, 1:2])  # Using only the first two components to make a 2d plot
 
-pca_plot <- ggplot(scores, aes(x = Comp.1, y = Comp.2)) +
+# Loadings scaled using eigenvalues to match biplot behavior
+scale_factor <- max(abs(scores$Comp.1), abs(scores$Comp.2))
+
+loadings <- loadings * scale_factor  # Rescale loadings by the same factor as scores
+
+# Plot with flipped x-axis and matching scales
+pca_plot <- ggplot(scores, aes(x = -Comp.1, y = Comp.2)) +
   geom_point() +
-  geom_segment(data = loadings, aes(x = 0, y = 0, xend = 3*Comp.1, yend = 3*Comp.2),
-               arrow = arrow(length = unit(0.2, "cm")), color = '#47c16e') +
-  geom_text(data = loadings, aes(x = 3*Comp.1, y = 3*Comp.2, label = rownames(loadings)),
-            color = '#47c16e', hjust = -0.2) +
+  geom_segment(data = loadings, aes(x = 0, y = 0, xend = -Comp.1, yend = Comp.2),
+               arrow = arrow(length = unit(0.2, "cm")), color = '#084439') +
+  geom_text(data = loadings, aes(x = -Comp.1, y = Comp.2, label = rownames(loadings)),
+            color = '#084439', hjust = -0.2) +
   labs(
-    title = "Principal Component Analysis of Nutrient Data",
+    title = "Principal Component Analysis of SGD-related Water Quality Parameters \n",
     x = "Principal Component 1",
     y = "Principal Component 2"
   ) +
@@ -93,35 +101,28 @@ pca_plot <- ggplot(scores, aes(x = Comp.1, y = Comp.2)) +
   theme(
     plot.title = element_text(hjust = 0.5, size = 12, face = "bold"),
     axis.title = element_text(size = 12)
-  )
+  ) +
+  scale_x_continuous(limits = c(-5, 5)) +
+  scale_y_continuous(limits = c(-3, 3))
 
 pca_plot
-#ggsave(pca_plot, filename = "PCA_Plot.png", dpi = 600, width = 7, height = 5)
-```
-
-```{r}
-sd_columns <- names(all_nut)[grepl("sd_", names(all_nut)) & !grepl("Phosphate_umolL|NN_umolL|Ammonia_umolL|NNP_umolL|Silicate_umolL",names(all_nut))]
+#ggsave(pca_plot, filename = "output/PCA_Plot.png", dpi = 600, width = 10, height = 6)
 ```
 
 ```{r}
 nut_no_seep_scaled$pc1 = -1*(pca$scores[,1]) #what's this data's score on pc1 axis
-nut_no_seep$pc1 = -1*(pca$scores[,1]) #what's this data's score on pc1 axis
+nut_no_seep_scaled$pc2 = (pca$scores[,2]) #what's this data's score on pc1 axis
 ```
 
 ```{r}
-explan <- nut_no_seep[,c("CowTagID", "pc1", pulse_columns, sd_columns)]
-###### write.csv(explan, "data/explanatory_variables.csv")
+nut_no_seep$pc1 = -1*(pca$scores[,1]) #don't forget to flip it!
 ```
 
-# What if we take the N/P Ratio out of it (NS Suggestion)
-```{r}
-pulse_columns_2 <- pulse_columns[1:4]
-chart.Correlation(pulse_df_2)
-```
 
 ```{r}
-pca.data <- na.omit(nut_no_seep_scaled[, c(pulse_columns_2)]) 
-pca = princomp(pca.data, cor=TRUE)
-biplot(pca)
-```
+explanatory_variables <- nut_no_seep[,c("CowTagID", "pc1", pulse_columns)]
 
+#pc1_df <- left_join(explanatory_variables[,c("CowTagID", "pc1")], response_data[,c("CowTagID", "Pin_Number")]) %>% distinct()
+#write.csv(pc1_df, "data/pc1.csv")
+write.csv(explanatory_variables, "data/explanatory_variables.csv")
+```
