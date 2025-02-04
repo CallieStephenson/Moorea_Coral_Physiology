@@ -42,34 +42,6 @@ write_csv(PRU_Consumer_SI, here("data","PRU_MixSIAR_Consumer.csv"))
 
 ## Source
 
-```{r}
-#Zoop_POM_SI <- read.csv("../data/SI_Zoop.csv")
-Zoop_POM_SI <- read.csv("data/SI_Zoop.csv")
-Zoop_POM_SI$del13C <- Zoop_POM_SI$δ13C............vs..VPDB.
-Zoop_POM_SI$del15N <- Zoop_POM_SI$δ15N...........vs..AIR.
-
-# Subset data for "Out" and run the t-test
-# C
-out_data <- Zoop_POM_SI %>% filter(Seep_Out == "Out")
-t_out <- t.test(del13C ~ POM_Zoop, data = out_data)
-print("T-test for POM Out vs Zoop Out:")
-print(t_out)
-
-seep_data <- Zoop_POM_SI %>% filter(Seep_Out == "Seep")
-t_seep <- t.test(del13C ~ POM_Zoop, data = seep_data)
-print("T-test for POM Seep vs Zoop Seep:")
-print(t_seep)
-
-# N
-t_out <- t.test(del15N ~ POM_Zoop, data = out_data)
-print("T-test for POM Out vs Zoop Out:")
-print(t_out)
-
-t_seep <- t.test(del15N ~ POM_Zoop, data = seep_data)
-print("T-test for POM Seep vs Zoop Seep:")
-print(t_seep)
-```
-
 ```{r create source data}
 ZP_Source <- Zoop_POM_SI %>% 
   mutate(X = paste(POM_Zoop, Seep_Out, sep= " ")) %>% 
@@ -112,6 +84,184 @@ PRU_ZPS_Source <- rbind(ZP_Source, PRU_Symb_join)
 write_csv(PAC_ZPS_Source, here("data","PAC_MixSIAR_Source.csv"))
 write_csv(PRU_ZPS_Source, here("data","PRU_MixSIAR_Source.csv"))
 ```
+
+### T-test on whether we can combine samples at the seep and not at the seep
+```{r}
+# Subset data for "Out" and run the t-test
+# C
+out_data <- Zoop_POM_SI %>% filter(Seep_Out == "Out")
+t_out <- t.test(del13C ~ POM_Zoop, data = out_data)
+print("T-test for POM Out vs Zoop Out:")
+print(t_out)
+print("13C POM Out is not signiicantly different from Zoop Out (p>0.05)")
+
+seep_data <- Zoop_POM_SI %>% filter(Seep_Out == "Seep")
+t_seep <- t.test(del13C ~ POM_Zoop, data = seep_data)
+print("T-test for POM Seep vs Zoop Seep:")
+print(t_seep)
+print("13C POM Seep is not signiicantly different from Zoop Seep (p = 0.52")
+
+# N
+t_out <- t.test(del15N ~ POM_Zoop, data = out_data)
+print("T-test for POM Out vs Zoop Out:")
+print(t_out)
+print("15N POM Out is signiicantly different from Zoop Out (p = 0.014)")
+
+t_seep <- t.test(del15N ~ POM_Zoop, data = seep_data)
+print("T-test for POM Seep vs Zoop Seep:")
+print(t_seep)
+print("15N POM Seep is signiicantly different from Zoop Seep (p = 0.059)")
+```
+
+### T-test
+```{r}
+# Subset data for "Out" and run the t-test
+# C
+t_pom <- t.test(del13C ~ Seep_Out, data = Zoop_POM_SI %>% filter(POM_Zoop == "POM"))
+print("T-test for POM Out vs POM Seep:")
+print(t_pom)
+print("13C in POM at the Seep is signiicantly higher from POM Out (p<0.05)")
+
+t_zoop <- t.test(del13C ~ Seep_Out, data = Zoop_POM_SI %>% filter(POM_Zoop == "ZOOP"))
+print("T-test for Zoop Seep vs Zoop Out:")
+print(t_zoop)
+print("13C Zooplankton at the Seep is not signiicantly different from Zoop Out (p > 0.05")
+
+# N
+t_pom <- t.test(del15N ~ Seep_Out, data = Zoop_POM_SI %>% filter(POM_Zoop == "POM"))
+print("T-test for POM Out vs POM Seep:")
+print(t_pom)
+print("15N in POM at the Seep is not signiicantly different from POM Out (p>0.05)")
+
+t_zoop <- t.test(del15N ~ Seep_Out, data = Zoop_POM_SI %>% filter(POM_Zoop == "ZOOP"))
+print("T-test for Zoop Seep vs Zoop Out:")
+print(t_zoop)
+print("15N Zooplankton at the Seep is signiicantly higher than Zoop Out (p < 0.05)")
+```
+### Plots
+P. acuta
+```{r}
+pc1 <- read.csv("data/pc1.csv")
+pc1$Pin_Number <- as.numeric(sub("^.", "", pc1$CowTagID))
+
+symb_pc1 <- left_join(response[,c("Pin_Number", "δ13C_symb", "δ15N_symb", "Species")], pc1[,c("Pin_Number", "pc1")])
+
+Symb_plots <- symb_pc1[,c("pc1", "δ13C_symb", "δ15N_symb", "Species")] %>% 
+  rename(del13C = δ13C_symb, 
+         del15N = δ15N_symb) %>% 
+  mutate(Species = paste0(Species, " symbiont")) %>% 
+  filter(!is.na(del13C)) %>% 
+  filter(!is.na(del15N))
+
+#set up for custom labels
+Symb_plots$Species <- factor(Symb_plots$Species, 
+                              levels = c("Pocillopora acuta symbiont", "Porites rus symbiont"))
+# Custom labels 
+custom_labels <- c(
+  expression(italic("Pocillopora acuta") * " symbiont"),
+  expression(italic("Porites rus") * " symbiont")
+)
+
+#13C plot
+# Find the range for del13C
+min_13C <- min(c(Symb_plots$del13C, Zoop_POM_SI$del13C), na.rm = TRUE)
+max_13C <- max(c(Symb_plots$del13C, Zoop_POM_SI$del13C), na.rm = TRUE)
+# Symbiont
+# symb_13C_plot <- ggplot(data = Symb_plots, aes(y = del13C, x = Species, color = pc1)) +
+#   geom_violin()+
+#   geom_jitter(width = 0.2, height = 0) +
+#   scale_color_viridis()+
+#   scale_x_discrete(labels = custom_labels) + 
+#   scale_y_continuous(limits = c(min_13C, max_13C)) +
+#   labs(x = "", subtitle = "C. Symbiont 13C")
+
+symb_13C_pac_plot <- ggplot(data = Symb_plots %>% filter(Species == "Pocillopora acuta symbiont"), aes(y = del13C, x = pc1, color = pc1)) +
+  geom_point() +
+  scale_color_viridis()+
+  scale_x_discrete(labels = custom_labels) + 
+  labs(x = "PC1\n", y = "", subtitle = expression("C. δ13C " * italic("P. acuta") * " symbiont")) +
+  scale_y_continuous(limits = c(min_13C, max_13C)) + guides(color="none")
+
+symb_13C_pru_plot <- ggplot(data = Symb_plots %>% filter(Species == "Porites rus symbiont"), aes(y = del13C, x = pc1, color = pc1)) +
+  geom_point() +
+  scale_color_viridis()+
+  scale_x_discrete(labels = custom_labels) + 
+  labs(x = "PC1\n", y = "",subtitle = expression("D. δ13C " * italic("P. rus") * " symbiont")) +
+  scale_y_continuous(limits = c(min_13C, max_13C))+ guides(color="none")
+  
+# Pom
+pom_13C_plot <- ggplot(data = Zoop_POM_SI %>% filter(POM_Zoop == "POM"), aes(y = del13C, x = Seep_Out, color = Seep_Out)) +
+  geom_violin()+
+  geom_jitter(width = 0.05, height = 0) + 
+  labs(x = "", y = "δ13C",subtitle = "A. δ13C Particulate Organic Matter")+
+  scale_color_manual(values = c("Out" = "#440154", "Seep" = "#fde725"))+ 
+  scale_y_continuous(limits = c(min_13C, max_13C))+ guides(color="none")+
+  geom_signif(comparisons = list(c("Out", "Seep")), test = "t.test", map_signif_level = TRUE)
+
+# Zoop
+zoop_13C_plot <- ggplot(data = Zoop_POM_SI %>% filter(POM_Zoop == "ZOOP"), aes(y = del13C, x = Seep_Out, color = Seep_Out)) +
+  geom_violin()+
+  geom_jitter(width = 0.05, height = 0) + 
+  labs(x = "", y = "", subtitle = "B. δ13C Zooplankton")+
+  scale_color_manual(values = c("Out" = "#440154", "Seep" = "#fde725"))+ 
+  scale_y_continuous(limits = c(min_13C, max_13C))+ guides(color="none")
+
+#15N plot
+min_15N <- min(c(Symb_plots$del15N, Zoop_POM_SI$del15N), na.rm = TRUE)
+max_15N <- max(c(Symb_plots$del15N, Zoop_POM_SI$del15N), na.rm = TRUE)
+
+# Symbiont
+# symb_15N_plot <- ggplot(data = Symb_plots, aes(y = del15N, x = Species, color = pc1)) +
+#   geom_violin()+
+#   geom_jitter(width = 0.2, height = 0) +
+#   scale_color_viridis()+
+#   scale_x_discrete(labels = custom_labels) + 
+#   labs(x = "", subtitle = "F. Symbiont 15N") +
+#   scale_y_continuous(limits = c(min_15N, max_15N))
+
+
+symb_15N_pac_plot <- ggplot(data = Symb_plots %>% filter(Species == "Pocillopora acuta symbiont"), aes(y = del15N, x = pc1, color = pc1)) +
+  geom_point() +
+  scale_color_viridis()+
+  scale_x_discrete(labels = custom_labels) + 
+  labs(x = "PC1\n", y = "", subtitle = expression("G. δ15N " * italic("P. acuta") * " symbiont")) +
+  scale_y_continuous(limits = c(min_15N, max_15N))+ guides(color="none")
+
+symb_15N_pru_plot <- ggplot(data = Symb_plots %>% filter(Species == "Porites rus symbiont"), aes(y = del15N, x = pc1, color = pc1)) +
+  geom_point() +
+  scale_color_viridis()+
+  scale_x_discrete(labels = custom_labels) + 
+  labs(x = "PC1\n", y = "", subtitle = expression("H. δ15N " * italic("P. rus") * " symbiont")) +
+  scale_y_continuous(limits = c(min_15N, max_15N))+ guides(color="none")
+
+
+# Pom
+pom_15N_plot <- ggplot(data = Zoop_POM_SI %>% filter(POM_Zoop == "POM"), aes(y = del15N, x = Seep_Out, color = Seep_Out)) +
+  geom_violin()+
+  geom_jitter(width = 0.05, height = 0) + 
+  labs(x = "", y = "δ15N ", subtitle = "E. δ15N Particulate Organic Matter")+
+  scale_color_manual(values = c("Out" = "#440154", "Seep" = "#fde725"))+
+  scale_y_continuous(limits = c(min_15N, max_15N))+ guides(color="none")
+
+# Zoop
+zoop_15N_plot <- ggplot(data = Zoop_POM_SI %>% filter(POM_Zoop == "ZOOP"), aes(y = del15N, x = Seep_Out, color = Seep_Out)) +
+  geom_violin()+
+  geom_jitter(width = 0.05, height = 0) + 
+  labs(x = "", y = "", subtitle = "F. δ15N Zooplankton")+
+  scale_color_manual(values = c("Out" = "#440154", "Seep" = "#fde725"))+
+  scale_y_continuous(limits = c(min_15N, max_15N))+ guides(color="none") +
+  geom_signif(comparisons = list(c("Out", "Seep")), test = "t.test", map_signif_level = TRUE)
+
+#all plots
+# combined_plot_all <- plot_grid(pom_13C_plot, zoop_13C_plot, symb_13C_plot, pom_15N_plot, zoop_15N_plot, symb_15N_plot, ncol = 3)
+
+combined_plot_all <- plot_grid(pom_13C_plot, zoop_13C_plot, symb_13C_pac_plot, symb_13C_pru_plot, pom_15N_plot, zoop_15N_plot, symb_15N_pac_plot, symb_15N_pru_plot, ncol = 4)
+
+combined_plot_all
+
+ggsave(combined_plot_all, filename = "output/Source_Isotopes.png", dpi = 600, width = 15, height = 10)
+```
+
 
 ## Create iscrim
 Sourced from Price Paper
