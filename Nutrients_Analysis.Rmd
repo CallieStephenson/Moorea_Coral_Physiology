@@ -4,7 +4,7 @@ author: "Callie Stephenson"
 date: "2024-12-03"
 output: html_document
 editor_options: 
-  chunk_output_type: inline
+  chunk_output_type: console
 ---
 # Set-up
 
@@ -38,29 +38,9 @@ custom_theme <- theme_minimal(base_size = 10)+
 load data
 ```{r}
 response_data <- read.csv("data/response_data.csv")
-explanatory_variables <- read.csv("data/explanatory_variables.csv")
+explanatory_variables <- read.csv("data/explanatory_variables.csv") %>% 
+  select(!pc1)
 all_nut <- read.csv("data/All_Nutrients_Processed.csv")
-```
-
-model data
-```{r}
-model_data <- left_join(response_data, explanatory_variables, by = join_by(CowTagID))
-
-PAC_model_data <- model_data %>%
-  filter(Species == "Pocillopora acuta", !is.na(Pin_Number)) %>% 
-  mutate(pc1 = -1*pc1)
-
-
-PAC_model_data_caged_only <- PAC_model_data %>% 
-  filter(Cage_Uncaged == "C")
-
-PRU_model_data <- model_data %>%
-  filter(Species == "Porites rus", !is.na(Pin_Number)) %>% 
-  mutate(pc1 = -1*pc1)%>%
-  mutate(Percent_Change = if_else(Placement_Code == "PRU V13 A", NA_real_, Percent_Change))
-
-PRU_model_data_caged_only <- PRU_model_data %>% 
-  filter(Cage_Uncaged == "C")
 ```
 
 # PCA
@@ -167,13 +147,31 @@ nut_no_seep$pc1 = -1*(pca$scores[,1]) #don't forget to flip it!
 
 
 ```{r}
-explanatory_variables <- nut_no_seep[,c("CowTagID", "pc1", pulse_columns)]
+explanatory_variables_with_pc <- nut_no_seep[,c("CowTagID", "pc1", pulse_columns)]
 
-pc1_df <- left_join(explanatory_variables[,c("CowTagID", "pc1")], response_data[,c("CowTagID", "Pin_Number")]) %>% distinct()
+pc1_df <- left_join(explanatory_variables_with_pc[,c("CowTagID", "pc1")], response_data[,c("CowTagID", "Pin_Number")]) %>% distinct()
 #write.csv(pc1_df, "data/pc1.csv")
 #write.csv(explanatory_variables, "data/pc1.csv")
 ```
 
+model data
+```{r}
+model_data <- left_join(response_data, explanatory_variables_with_pc, by = join_by(CowTagID))
+
+PAC_model_data <- model_data %>%
+  filter(Species == "Pocillopora acuta", !is.na(Pin_Number))
+
+
+PAC_model_data_caged_only <- PAC_model_data %>% 
+  filter(Cage_Uncaged == "C")
+
+PRU_model_data <- model_data %>%
+  filter(Species == "Porites rus", !is.na(Pin_Number)) %>% 
+  mutate(Percent_Change = if_else(Placement_Code == "PRU V13 A", NA_real_, Percent_Change))
+
+PRU_model_data_caged_only <- PRU_model_data %>% 
+  filter(Cage_Uncaged == "C")
+```
 
 # Growth
 
@@ -197,7 +195,7 @@ pac_growth_raw <- ggplot(PAC_model_data, aes(x = pc1, y = Percent_Change, color 
 
 pac_growth_raw
 
-ggsave("output/pac_growth_nutrientpca_raw.png",pac_growth_raw, height = 5, width = 5.5)
+#ggsave("output/pac_growth_nutrientpca_raw.png",pac_growth_raw, height = 5, width = 5.5)
 ```
 
 ### linear
@@ -446,8 +444,10 @@ pac_chl_raw <- ggplot(PAC_model_data, aes(x = pc1, y = Chl_ug.cm.2, color = Geno
 
 pac_chl_raw
 
-ggsave("output/pac_chl_nutrientpca_raw.png",pac_chl_raw, height = 5, width = 5.5)
+#ggsave("output/pac_chl_nutrientpca_raw.png",pac_chl_raw, height = 5, width = 5.5)
 ```
+
+
 ### Linear
 ```{r}
 linear_chl_model_pac <- lmer(Chl_ug.cm.2 ~ pc1 +
@@ -498,7 +498,7 @@ pac_chl_MOD <-ggplot() +
   geom_line(data = prediction_data, aes(x = pc1, y = fit), color = "#21908c") +  # Add the fitted line
   geom_ribbon(data = prediction_data, aes(x = pc1, ymin = lower, ymax = upper), alpha = 0.2, fill = "#21908c") +  
   #annotations
-  annotate("text", y = 3.5, x = 2.5,
+  annotate("text", y = 3.5, x = -4,
          label = paste("p =", round(p_values["pc1"], 6),
                        "\nMarginal R² =", round(marginal_r2, 3),
                        "\nConditional R² =", round(conditional_r2, 3)),
@@ -699,8 +699,8 @@ plot_chl <- ggplot() +
   geom_point(data = PAC_model_data, 
              aes(x = pc1, y = Chl_ug.cm.2), color = "grey50", alpha = 0.6) +
   # Prediction line with confidence interval
-  geom_line(data = pred_chl, aes(x = x, y = predicted), color = "#21908c") +
-  geom_ribbon(data = pred_chl, aes(x = x, ymin = conf.low, ymax = conf.high), 
+  geom_line(data = pred_chl_poly, aes(x = x, y = predicted), color = "#21908c") +
+  geom_ribbon(data = pred_chl_poly, aes(x = x, ymin = conf.low, ymax = conf.high), 
               fill = "#21908c", alpha = 0.2) +
   scale_y_continuous(limits = c(-1.5,25)) +
   labs(
@@ -708,7 +708,7 @@ plot_chl <- ggplot() +
     y = expression(paste("Chlorophyll density (μg ", cm^2, ")"))
   ) +
   custom_theme+
-  annotate("text", y = 1, x = max(pred_chl$x, na.rm=TRUE), 
+  annotate("text", y = 1, x = max(pred_chl_poly$x, na.rm=TRUE), 
            label = paste("p =", round(p_values["poly(pc1, 2)"], 6)), 
            hjust = 1.1, vjust = 1, size = 3)
 ```
@@ -952,6 +952,121 @@ plot_chl_p04_caged <- ggplot() +
 plot_chl_p04_caged
 #ggsave("output/pac_chl_pH_mod.png", plot_chl_pH, height = 5, width = 5.5)
 ```
+# Photosynthetic Efficiency
+So, we have chlorophyll and we have symbiont - we want to know if chlorophyll is increasing per cm2 because the cells are increasing, or because the chlopohyll per cell is increasing.
+```{r}
+PAC_model_data$pe <- PAC_model_data$Chl_ug.cm.2 / PAC_model_data$FSC.Events_per_cm_2 
+PRU_model_data$pe <- PRU_model_data$Chl_ug.cm.2 / PRU_model_data$FSC.Events_per_cm_2 
+#there's a major outlier
+PRU_model_data <- PRU_model_data %>%
+  mutate(pe = if_else(pe < 0.0010526, pe, NA_real_))
+```
+
+## Pocillopora acuta
+### exploratory plot
+```{r}
+pac_pe_raw <- ggplot(PAC_model_data, aes(x = pc1, y = log10(pe), color = Genotype, shape = Cage_Uncaged)) +
+  geom_point() +
+  labs(
+    x = "PC1",
+    y = "Photosynthetic efficiency",
+    title = " "
+    #title = expression(italic("Pocillopora acuta") ~ "Change in Buoyant Weight by Nutrient Pulses")
+  ) +
+  scale_color_fish_d(option = "Coryphaena_hippurus", direction = -1) +
+  theme_minimal()+
+  theme(legend.position="none",
+        plot.background = element_rect(fill = "white")) +
+  guides(color = "none", shape = "none") 
+
+pac_pe_raw
+```
+
+### Model:
+```{r}
+linear_pe_model_pac <- lmer(log10(pe) ~ pc1 + (1|Genotype) + (1|Cage_Uncaged), data = PAC_model_data) #needs a log10 transformation
+check_model(linear_pe_model_pac)
+summary(linear_pe_model_pac)
+Anova(linear_pe_model_pac)
+```
+
+```{r}
+# Define the data and random effects
+random_effects <- "(1|Genotype) + (1|Cage_Uncaged)"
+
+# Define the predictors
+predictors <- pulse_columns
+
+# Initialize a results dataframe
+results <- data.frame(Variable = character(), 
+                      P_Value = numeric(), 
+                      Marginal_R2 = numeric(), 
+                      Conditional_R2 = numeric(),
+                      AIC = numeric(),
+                      stringsAsFactors = FALSE)
+
+# Loop through each predictor
+for (variable in predictors) {
+  # Construct the formula dynamically
+  formula <- as.formula(paste("log10(pe) ~", variable, "+", random_effects))
+  
+  # Fit the model
+  model <- lmer(formula, data = PAC_model_data)
+  
+  # Get the p-value from Anova()
+  p_value <- Anova(model)[[3]]
+  
+  # Get R^2 values
+  r2_values <- r.squaredGLMM(model)
+  marginal_r2 <- r2_values[1]  # Marginal R^2
+  conditional_r2 <- r2_values[2]  # Conditional R^2
+  
+  # Get AIC values
+  aic_value <- AIC(model)
+  
+  # Append results to the dataframe
+  results <- rbind(results, 
+                   data.frame(Variable = variable, 
+                              P_Value = p_value, 
+                              Marginal_R2 = marginal_r2, 
+                              Conditional_R2 = conditional_r2,
+                              AIC = aic_value))
+}
+
+# Display the results
+print(results[order(results$AIC),])
+```
+
+
+
+## Porites rus
+### exploratory plot
+```{r}
+pru_pe_raw <- ggplot(PRU_model_data, aes(x = pc1, y = log10(pe), color = Genotype, shape = Cage_Uncaged)) +
+  geom_point() +
+  labs(
+    x = "PC1",
+    y = "Photosynthetic efficiency",
+    title = " "
+    #title = expression(italic("Pocillopora acuta") ~ "Change in Buoyant Weight by Nutrient Pulses")
+  ) +
+  scale_color_fish_d(option = "Coryphaena_hippurus", direction = -1) +
+  theme_minimal()+
+  theme(legend.position="none",
+        plot.background = element_rect(fill = "white")) +
+  guides(color = "none", shape = "none") 
+
+pru_pe_raw
+```
+
+### linear model
+```{r}
+linear_pe_model_pru <- lmer(log10(pe) ~ pc1 + (1|Genotype) + (1|Cage_Uncaged), data = PRU_model_data)
+#check_model(linear_carbon_model_pac)
+#summary(linear_carbon_model_pac)
+Anova(linear_pe_model_pru)
+```
+
 
 # Heterotrophy
 ## Carbon
@@ -1126,7 +1241,7 @@ plot_15N_pc1 <- ggplot() +
   geom_line(data = prediction_data, aes(x = pc1, y = fit), color = "#21908c") +  # Add the fitted line
   geom_ribbon(data = prediction_data, aes(x = pc1, ymin = lower, ymax = upper), alpha = 0.2, fill = "#21908c") +
   #annotations
-  annotate("text", y = -0.2, x = 2.6,
+  annotate("text", y = -0.2, x = 2,
          label = paste("p =", round(p_values["pc1"], 6),
                        "\nMarginal R² =", round(marginal_r2, 3),
                        "\nConditional R² =", round(conditional_r2, 3)),
@@ -1242,6 +1357,84 @@ plot_15N_po4
 #ggsave("output/pac_15N_p04_mod.png", plot_15N_po4, height = 7, width = 6)
 ```
 
+But, we're talking about nitrogen, so lets look at the n sources
+```{r}
+#model
+linear_nitrogen_model_pac_NN <- lmer(Δ15N ~ Low_Tide_Mean_NN_umolL +
+                                  (1|Genotype), data = SI_PAC_model_data)
+
+#prediction
+prediction_data <- data.frame(Low_Tide_Mean_NN_umolL = seq(
+  min(SI_PAC_model_data$Low_Tide_Mean_NN_umolL),
+  max(SI_PAC_model_data$Low_Tide_Mean_NN_umolL),
+  length.out = 100
+))
+
+# Add predicted values to the dataframe using the model without random effects
+predictions <- predict(linear_nitrogen_model_pac_NN, newdata = prediction_data, re.form = NA, se.fit = TRUE)
+
+#Add to new_data
+prediction_data <- prediction_data %>%
+  mutate(fit = predictions$fit,
+         se.fit = predictions$se.fit,
+         lower = fit - 1.96 * se.fit,  # 95% CI lower
+         upper = fit + 1.96 * se.fit)   # 95% CI upper
+
+#annnotations
+anova_results <- car::Anova(linear_nitrogen_model_pac_NN)
+p_values <- anova_results$`Pr(>Chisq)`[1]  # Adjust index based on your model's fixed effects
+names(p_values) <- rownames(anova_results)[1] 
+r2_values <- r.squaredGLMM(linear_nitrogen_model_pac_NN)
+marginal_r2 <- r2_values[1]  # Marginal R^2
+conditional_r2 <- r2_values[2]
+aic_value <- AIC(linear_nitrogen_model_pac_NN)
+
+# Create the plot with the fitted line
+plot_15N_NN <-ggplot() +
+  geom_point(aes(x = Low_Tide_Mean_NN_umolL, y = Δ15N, color = Genotype), data = SI_PAC_model_data) +
+  scale_color_fish_d(option = "Coryphaena_hippurus", direction = -1) +
+  #add in line and ribbon
+  geom_line(data = prediction_data, aes(x = Low_Tide_Mean_NN_umolL, y = fit), color = "#21908c") +  # Add the fitted line
+  geom_ribbon(data = prediction_data, aes(x = Low_Tide_Mean_NN_umolL, ymin = lower, ymax = upper), alpha = 0.2, fill = "#21908c") +  # Add CI
+  labs(title = " ",
+       x = "Low Tide Mean NN (umolL)",
+       y = "Δ15N") +
+  annotate("text", y = 0, x = 0.21,
+         label = paste("p =", round(p_values["Low_Tide_Mean_NN_umolL"], 6),
+                       "\nMarginal R² =", round(marginal_r2, 3),
+                       "\nConditional R² =", round(conditional_r2, 3),
+                       "\nAIC =", round(aic_value,3)),
+         hjust = 0, vjust = -1, size = 3) +
+  theme_minimal() +
+  theme(legend.position="bottom",
+        plot.background = element_rect(fill = "white"))
+
+plot_15N_NN
+#ggsave("output/pac_15N_p04_mod.png", plot_15N_NN, height = 7, width = 6)
+```
+
+
+##### Looking at H or S
+```{r}
+linear_nitrogen_host_model_pac <- lmer(δ15N_host ~ pc1 +
+                                  (1|Genotype), data = SI_PAC_model_data)
+Anova(linear_nitrogen_host_model_pac)
+```
+```{r}
+linear_nitrogen_symb_model_pac <- lmer(δ15N_symb ~ pc1 +
+                                  (1|Genotype), data = SI_PAC_model_data)
+Anova(linear_nitrogen_symb_model_pac)
+```
+wow. that's craZy. neither are significantly changing, but their relationship to each other is?
+what if we filter out those super low ones:
+```{r}
+linear_nitrogen_filtered_model_pac <- lmer(Δ15N ~ pc1 +
+                                  (1|Genotype), 
+                                  data = SI_PAC_model_data %>% filter(Δ15N >0))
+Anova(linear_nitrogen_filtered_model_pac)
+```
+nope, still significant
+
 #### Polynomial model:
 ```{r}
 polynomial_nitrogen_model_pac <- lmer(Δ15N ~ poly(pc1, 2) +
@@ -1322,6 +1515,22 @@ ggplot() +
 
 
 ```{r}
-PAC_model_data
+# Perform ANOVA on the linear mixed model
+anova_results <- anova(linear_pe_model_pru)
+
+# Display the results
+print(anova_results)
+
+# Extract specific values
+p_value <- anova_results$`Pr(>F)`[1]
+num_df <- anova_results$Df[1]
+den_df <- anova_results$DenDF[1]
+f_stat <- anova_results$`F value`[1]
+
+cat("p-value:", p_value, "\n")
+cat("NumDF:", num_df, "\n")
+cat("DenDF:", den_df, "\n")
+cat("F-statistic:", f_stat, "\n")
+
 ```
 
