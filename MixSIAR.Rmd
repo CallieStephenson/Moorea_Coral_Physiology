@@ -41,6 +41,13 @@ write_csv(PRU_Consumer_SI, here("data","PRU_MixSIAR_Consumer.csv"))
 ```
 
 ## Source
+```{r}
+#Zoop_POM_SI <- read.csv("../data/SI_Zoop.csv")
+Zoop_POM_SI <- read.csv("data/SI_Zoop.csv")
+Zoop_POM_SI$del13C <- Zoop_POM_SI$δ13C............vs..VPDB.
+Zoop_POM_SI$del15N <- Zoop_POM_SI$δ15N...........vs..AIR.
+```
+
 
 ```{r create source data}
 ZP_Source <- Zoop_POM_SI %>% 
@@ -113,9 +120,8 @@ print(t_seep)
 print("15N POM Seep is signiicantly different from Zoop Seep (p = 0.059)")
 ```
 
-### T-test
+### T-test on Seep vs out for each sample
 ```{r}
-# Subset data for "Out" and run the t-test
 # C
 t_pom <- t.test(del13C ~ Seep_Out, data = Zoop_POM_SI %>% filter(POM_Zoop == "POM"))
 print("T-test for POM Out vs POM Seep:")
@@ -144,23 +150,23 @@ P. acuta
 pc1 <- read.csv("data/pc1.csv")
 pc1$Pin_Number <- as.numeric(sub("^.", "", pc1$CowTagID))
 
-symb_pc1 <- left_join(response[,c("Pin_Number", "δ13C_symb", "δ15N_symb", "Species")], pc1[,c("Pin_Number", "pc1")])
+symb_pc1 <- left_join(response[,c("Pin_Number", "δ13C_symb", "δ15N_symb", "Species", "Genotype")], pc1[,c("Pin_Number", "pc1")])
 
-Symb_plots <- symb_pc1[,c("pc1", "δ13C_symb", "δ15N_symb", "Species")] %>% 
+Symb_plots <- symb_pc1[,c("pc1", "δ13C_symb", "δ15N_symb", "Species", "Genotype")] %>% 
   rename(del13C = δ13C_symb, 
          del15N = δ15N_symb) %>% 
   mutate(Species = paste0(Species, " symbiont")) %>% 
   filter(!is.na(del13C)) %>% 
   filter(!is.na(del15N))
 
-#set up for custom labels
-Symb_plots$Species <- factor(Symb_plots$Species, 
-                              levels = c("Pocillopora acuta symbiont", "Porites rus symbiont"))
-# Custom labels 
-custom_labels <- c(
-  expression(italic("Pocillopora acuta") * " symbiont"),
-  expression(italic("Porites rus") * " symbiont")
-)
+# #set up for custom labels
+# Symb_plots$Species <- factor(Symb_plots$Species, 
+#                               levels = c("Pocillopora acuta symbiont", "Porites rus symbiont"))
+# # Custom labels 
+# custom_labels <- c(
+#   expression(italic("Pocillopora acuta") * " symbiont"),
+#   expression(italic("Porites rus") * " symbiont")
+# )
 
 #13C plot
 # Find the range for del13C
@@ -175,19 +181,18 @@ max_13C <- max(c(Symb_plots$del13C, Zoop_POM_SI$del13C), na.rm = TRUE)
 #   scale_y_continuous(limits = c(min_13C, max_13C)) +
 #   labs(x = "", subtitle = "C. Symbiont 13C")
 
-symb_13C_pac_plot <- ggplot(data = Symb_plots %>% filter(Species == "Pocillopora acuta symbiont"), aes(y = del13C, x = pc1, color = pc1)) +
+symb_13C_pac_plot <- ggplot(data = Symb_plots %>% filter(Species == "Pocillopora acuta symbiont"), aes(y = del13C, x = pc1, color = pc1, shape = Genotype)) +
   geom_point() +
-  scale_color_viridis()+
-  scale_x_discrete(labels = custom_labels) + 
+  scale_color_viridis() + 
   labs(x = "PC1\n", y = "", subtitle = expression("C. δ13C " * italic("P. acuta") * " symbiont")) +
-  scale_y_continuous(limits = c(min_13C, max_13C)) + guides(color="none")
+  scale_y_continuous(limits = c(min_13C, max_13C)) + guides(color="none", shape = "none")
 
-symb_13C_pru_plot <- ggplot(data = Symb_plots %>% filter(Species == "Porites rus symbiont"), aes(y = del13C, x = pc1, color = pc1)) +
+symb_13C_pru_plot <- ggplot(data = Symb_plots %>% filter(Species == "Porites rus symbiont"), aes(y = del13C, x = pc1, color = pc1, shape = Genotype)) +
   geom_point() +
   scale_color_viridis()+
-  scale_x_discrete(labels = custom_labels) + 
+#  scale_x_discrete(labels = custom_labels) + 
   labs(x = "PC1\n", y = "",subtitle = expression("D. δ13C " * italic("P. rus") * " symbiont")) +
-  scale_y_continuous(limits = c(min_13C, max_13C))+ guides(color="none")
+  scale_y_continuous(limits = c(min_13C, max_13C))+ guides(color="none", shape = "none")
   
 # Pom
 pom_13C_plot <- ggplot(data = Zoop_POM_SI %>% filter(POM_Zoop == "POM"), aes(y = del13C, x = Seep_Out, color = Seep_Out)) +
@@ -220,19 +225,19 @@ max_15N <- max(c(Symb_plots$del15N, Zoop_POM_SI$del15N), na.rm = TRUE)
 #   scale_y_continuous(limits = c(min_15N, max_15N))
 
 
-symb_15N_pac_plot <- ggplot(data = Symb_plots %>% filter(Species == "Pocillopora acuta symbiont"), aes(y = del15N, x = pc1, color = pc1)) +
+symb_15N_pac_plot <- ggplot(data = Symb_plots %>% filter(Species == "Pocillopora acuta symbiont"), aes(y = del15N, x = pc1, color = pc1, shape = Genotype)) +
   geom_point() +
   scale_color_viridis()+
-  scale_x_discrete(labels = custom_labels) + 
+#  scale_x_discrete(labels = custom_labels) + 
   labs(x = "PC1\n", y = "", subtitle = expression("G. δ15N " * italic("P. acuta") * " symbiont")) +
-  scale_y_continuous(limits = c(min_15N, max_15N))+ guides(color="none")
+  scale_y_continuous(limits = c(min_15N, max_15N))+ guides(color="none", shape = "none")
 
-symb_15N_pru_plot <- ggplot(data = Symb_plots %>% filter(Species == "Porites rus symbiont"), aes(y = del15N, x = pc1, color = pc1)) +
+symb_15N_pru_plot <- ggplot(data = Symb_plots %>% filter(Species == "Porites rus symbiont"), aes(y = del15N, x = pc1, color = pc1, shape = Genotype)) +
   geom_point() +
   scale_color_viridis()+
-  scale_x_discrete(labels = custom_labels) + 
+#  scale_x_discrete(labels = custom_labels) + 
   labs(x = "PC1\n", y = "", subtitle = expression("H. δ15N " * italic("P. rus") * " symbiont")) +
-  scale_y_continuous(limits = c(min_15N, max_15N))+ guides(color="none")
+  scale_y_continuous(limits = c(min_15N, max_15N))+ guides(color="none", shape = "none")
 
 
 # Pom
@@ -599,7 +604,7 @@ MixSIAR_Plot <- ggplot(MixSiar_results, aes(x = Source)) +
   ) +
   geom_point(aes(y = Mean * 100), color = "black", size = 2) +  # Add mean points
   scale_fill_manual(values = c("Autotrophy" = "#21908c", "Heterotrophy" = "#47c16e", "Seep-derived Heterotrophy" = "#fde725"), name = NULL) +  # Add yellow for Seep
-  labs(title = "Contributions to δ13C", y = "Proportional Contribution to Host δ13C", x = "") +
+  labs(title = "Contributions to δ13C", y = "Proportional Contribution to Host", x = "") +
   facet_wrap(~Species) +
   theme_minimal() +  # Keep this and combine the next theme settings
   theme(

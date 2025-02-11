@@ -4,7 +4,7 @@ author: "Callie Stephenson"
 date: "2024-12-03"
 output: html_document
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 # Set-up
 
@@ -22,6 +22,7 @@ library(ggeffects)
 library(lmerTest)
 library(glmnet)
 library(ggstats)
+library(stringr)
 ```
 
 ggplot theme
@@ -38,9 +39,9 @@ custom_theme <- theme_minimal(base_size = 10)+
 load data
 ```{r}
 response_data <- read.csv("data/response_data.csv")
-explanatory_variables <- read.csv("data/explanatory_variables.csv") %>% 
-  select(!pc1)
+explanatory_variables <- read.csv("data/explanatory_variables_all.csv")
 all_nut <- read.csv("data/All_Nutrients_Processed.csv")
+all_nut$Pin_Number <- as.numeric(str_sub(all_nut$CowTagID,2))
 ```
 
 # PCA
@@ -62,6 +63,7 @@ chart.Correlation(pulse_df)
 ```
 
 PCA:
+
 ```{r}
 pca.data <- na.omit(nut_no_seep_scaled[, c(pulse_columns)]) 
 pca = princomp(pca.data, cor=TRUE)
@@ -143,11 +145,12 @@ nut_no_seep_scaled$pc2 = (pca$scores[,2]) #what's this data's score on pc1 axis
 
 ```{r}
 nut_no_seep$pc1 = -1*(pca$scores[,1]) #don't forget to flip it!
+nut_no_seep$pc2 = (pca$scores[,2]) #don't forget to flip it!
 ```
 
 
 ```{r}
-explanatory_variables_with_pc <- nut_no_seep[,c("CowTagID", "pc1", pulse_columns)]
+explanatory_variables_with_pc <- nut_no_seep[,c("CowTagID", "pc1", "pc2", pulse_columns)]
 
 pc1_df <- left_join(explanatory_variables_with_pc[,c("CowTagID", "pc1")], response_data[,c("CowTagID", "Pin_Number")]) %>% distinct()
 #write.csv(pc1_df, "data/pc1.csv")
@@ -197,18 +200,58 @@ pac_growth_raw
 
 #ggsave("output/pac_growth_nutrientpca_raw.png",pac_growth_raw, height = 5, width = 5.5)
 ```
+### Plot raw pc2
+```{r}
+pac_growth_raw <- ggplot(PAC_model_data, aes(x = pc2, y = Percent_Change, color = Genotype, shape = Cage_Uncaged)) +
+  geom_point() +
+  labs(
+    x = "PC2",
+    y = "Percent Change in Buoyant Weight",
+    title = " "
+    #title = expression(italic("Pocillopora acuta") ~ "Change in Buoyant Weight by Nutrient Pulses")
+  ) +
+  scale_color_fish_d(option = "Coryphaena_hippurus", direction = -1) +
+  theme_minimal()+
+  theme(legend.position="none",
+        plot.background = element_rect(fill = "white")) +
+  guides(color = "none", shape = "none") 
+
+pac_growth_raw
+```
 
 ### linear
 ```{r}
 linear_growth_model_pac <- lmerTest::lmer(Percent_Change ~ pc1 +
-                                  (1|Genotype), data = PAC_model_data)
+                                  (1|Genotype)+ (1|Cage_Uncaged), data = PAC_model_data)
 #check_model(linear_growth_model_pac)
-#summary(linear_growth_model_pac)
+summary(linear_growth_model_pac)
 Anova(linear_growth_model_pac)
+anova(linear_growth_model_pac)
 ```
 
 This model does not support the hypothesis that nutrients from SGD contribute to the variance in calcification in Pocillopora acuta
+### linear pc2
+```{r}
+linear_growth_model_pac_pc2 <- lmerTest::lmer(Percent_Change ~ pc2 +
+                                  (1|Genotype)+ (1|Cage_Uncaged), data = PAC_model_data)
+#check_model(linear_growth_model_pac)
+#summary(linear_growth_model_pac)
+Anova(linear_growth_model_pac_pc2)
+```
+### linear plus temp
+```{r}
+temp_columns <- names(explanatory_variables)[grepl("Temperature", names(all_nut)) & 
+                                     !grepl("Low_Tide_Mean",names(all_nut))]
 
+PAC_model_data_temp <- left_join(PAC_model_data, explanatory_variables[,c("Pin_Number", temp_columns)])
+
+linear_growth_model_pac_temp <- lmerTest::lmer(Percent_Change ~ pc1 + (1|sd_Temperature) +
+                                  (1|Genotype) + (1|Cage_Uncaged), data = PAC_model_data_temp)
+
+#check_model(linear_growth_model_pac_temp)
+summary(linear_growth_model_pac_temp)
+anova(linear_growth_model_pac_temp)
+```
 
 ### polynomial model: 
 
@@ -219,7 +262,7 @@ polynomial_growth_model_pac <- lmer(log10(Percent_Change) ~ poly(pc1, 2) +
 Anova(polynomial_growth_model_pac)
 ```
 
-This model does not support the hypothesis that nutriencts from SGD contribute to the variance in calcification in Pocillopora acuta
+This model does not support the hypothesis that nutrients from SGD contribute to the variance in calcification in Pocillopora acuta
 
 ## P. rus
 
@@ -456,8 +499,6 @@ linear_chl_model_pac <- lmer(Chl_ug.cm.2 ~ pc1 +
 Anova(linear_chl_model_pac)
 ```
 #### Plot significant model
-
-
 ```{r}
 #prediction
 prediction_data <- data.frame(pc1 = seq(
@@ -1188,7 +1229,8 @@ ggsave("output/pac_15N_nutrientpca_raw.png",pac_15N_raw, height = 5, width = 5.5
 
 #### Linear model:
 ```{r}
-linear_nitrogen_model_pac <- lmer(Δ15N ~ pc1 +
+SI_PAC_model_data$Δ15N_T0 <- SI_PAC_model_data$δ15N_T0_host - SI_PAC_model_data$δ15N_T0_symb
+linear_nitrogen_model_pac <- lmer(Δ15N ~ pc1 + Δ15N_T0 +
                                   (1|Genotype), data = SI_PAC_model_data)
 #check_model(linear_nitrogen_model_pac)
 #summary(linear_nitrogen_model_pac)
@@ -1416,12 +1458,12 @@ plot_15N_NN
 
 ##### Looking at H or S
 ```{r}
-linear_nitrogen_host_model_pac <- lmer(δ15N_host ~ pc1 +
+linear_nitrogen_host_model_pac <- lmer(δ15N_host ~ pc1 + δ15N_T0_host +
                                   (1|Genotype), data = SI_PAC_model_data)
 Anova(linear_nitrogen_host_model_pac)
 ```
 ```{r}
-linear_nitrogen_symb_model_pac <- lmer(δ15N_symb ~ pc1 +
+linear_nitrogen_symb_model_pac <- lmer(δ15N_symb ~ pc1 + δ15N_T0_symb +
                                   (1|Genotype), data = SI_PAC_model_data)
 Anova(linear_nitrogen_symb_model_pac)
 ```
