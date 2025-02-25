@@ -334,6 +334,24 @@ first.plot <- ggplot(data = demo.siber.data, aes(iso1, iso2)) +
   theme_minimal() +
   theme(strip.text = element_text(face = "italic"))
 print(first.plot)
+
+first.rus.plot <- ggplot(data = demo.siber.data %>% filter(community=="Porites rus"), aes(iso1, iso2)) +
+  geom_point(aes(color = group, shape = group), size = 2)+
+  ylab(expression(paste(delta^{15}, "N (\u2030)")))+
+  xlab(expression(paste(delta^{13}, "C (\u2030)"))) + 
+  theme(text = element_text(size=15)) +
+  theme_minimal() +
+  theme(strip.text = element_text(face = "italic"))
+print(first.rus.plot)
+
+first.acuta.plot <- ggplot(data = demo.siber.data %>% filter(community=="Pocillopora acuta"), aes(iso1, iso2)) +
+  geom_point(aes(color = group, shape = group), size = 2)+
+  ylab(expression(paste(delta^{15}, "N (\u2030)")))+
+  xlab(expression(paste(delta^{13}, "C (\u2030)"))) + 
+  theme(text = element_text(size=15)) +
+  theme_minimal() +
+  theme(strip.text = element_text(face = "italic"))
+print(first.acuta.plot)
 ```
 
 The ggplot2 function `stat_ellipse` allows us to easily add ellipses, of varying **level** which corresponds to the prediction interval. This function defaults to using the t-distribution so we will override this and specify the normal distribution as is more fitting with the SIBER approach. We can also change the colour palettes used for the color of objects, and fills. I favour the "viridis" package for this, and use the discrete scale versions `scale_colour_viridis_d()` here as we have categorical groups specified here as "community" and "group". I find the last colour of this spectrum which is a plain yellow, does not render very well, especially with the fill overlaying the points and so choose to end its palette at 0.9 with `end = 0.9`.
@@ -368,6 +386,72 @@ ellipse.plot <- first.plot +
   scale_colour_viridis_d(end = 0.5) + 
   scale_fill_viridis_d(end = 0.5)
 print(ellipse.plot)
+
+ellipse.rus.plot <- first.rus.plot + 
+  stat_ellipse(aes(group = interaction(community, group), 
+                   fill = group, 
+                   color = group), 
+               alpha = 0, 
+               level = 0.95,
+               type = "norm",
+               geom = "polygon",
+               linetype = "dotted") +
+  stat_ellipse(aes(group = interaction(community, group), 
+                   fill = group, 
+                   color = group), 
+               alpha = 0.2, 
+               level = p.ell,
+               type = "norm",
+               geom = "polygon") + 
+  scale_colour_viridis_d(end = 0.5, labels = c("Host", "Symbiont")) + 
+  scale_fill_viridis_d(end = 0.5, labels = c("Host", "Symbiont")) +
+  scale_shape_manual(values = c(16, 17), labels = c("Host", "Symbiont")) +
+  guides(color = guide_legend(title = ""),
+         fill = guide_legend(title = ""),
+         shape = guide_legend(title = "")) +
+  #annotation
+  geom_text(data = data.frame(label = c("40% SEAc = 72.18% \n 95% SEAc = 92.69%")), 
+            aes(x = -18, y = 5, label = label), 
+            inherit.aes = FALSE,  # Don't inherit aesthetics from the main plot
+            size = 3,  # Adjust text size as needed
+            hjust = 0, vjust = 0)
+
+
+print(ellipse.rus.plot)
+ggsave("output/russiber.png", plot = ellipse.rus.plot, width = 4, height = 4, dpi = 600)
+
+
+ellipse.acuta.plot <- first.acuta.plot + 
+  stat_ellipse(aes(group = interaction(community, group), 
+                   fill = group, 
+                   color = group), 
+               alpha = 0, 
+               level = 0.95,
+               type = "norm",
+               geom = "polygon",
+               linetype = "dotted") +
+  stat_ellipse(aes(group = interaction(community, group), 
+                   fill = group, 
+                   color = group), 
+               alpha = 0.2, 
+               level = p.ell,
+               type = "norm",
+               geom = "polygon") + 
+  scale_colour_viridis_d(end = 0.5, labels = c("Host", "Symbiont")) + 
+  scale_fill_viridis_d(end = 0.5, labels = c("Host", "Symbiont")) +
+  scale_shape_manual(values = c(16, 17), labels = c("Host", "Symbiont")) +
+  guides(color = guide_legend(title = ""),
+         fill = guide_legend(title = ""),
+         shape = guide_legend(title = ""))+
+  #annotation
+  geom_text(data = data.frame(label = c("40% SEAc = 21.94% \n 95% SEAc = 66.60%")), 
+            aes(x = -18, y = 5, label = label), 
+            inherit.aes = FALSE,  # Don't inherit aesthetics from the main plot
+            size = 3,  # Adjust text size as needed
+            hjust = 0, vjust = 0)
+
+print(ellipse.acuta.plot)
+ggsave("output/acutasiber.png", plot = ellipse.acuta.plot,  width = 4, height = 4, dpi = 600)
 ```
 
 
