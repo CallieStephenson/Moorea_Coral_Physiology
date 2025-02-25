@@ -120,15 +120,20 @@ run_lmer_models <- function(model_data, species_list, response_list, predictors,
         # Extract AIC value
         aic_value <- AIC(model)
         
+        # Extract Beta Value
+        model_summary <- summary(model)
+        beta_value <- model_summary$coefficients[predictor, "Estimate"]
+        
         # Store results if p-value < 0.05
-        if (p_value < 0.05) {
+        #if (p_value < 0.05) {
           species_results <- rbind(species_results, 
                                    data.frame(Predictor = predictor,
-                                              P_Value = p_value,
+                                              Beta = beta_value,
                                               Marginal_R2 = marginal_r2,
                                               Conditional_R2 = conditional_r2,
+                                              P_Value = p_value,
                                               AIC = aic_value))
-        }
+       # }
       }
       
       # Store results in list
