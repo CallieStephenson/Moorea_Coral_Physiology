@@ -3,6 +3,8 @@ title: "MixSIAR"
 author: "Callie Stephenson"
 date: "2024-12-16"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 Code is modified from the Wolves Vignette MixSIAR example: https://brianstock.github.io/MixSIAR/articles/wolves_ex.html
 
@@ -14,6 +16,7 @@ library(here)
 library(MixSIAR)
 library(readr)
 library(ggpubr)
+library(viridis)
 mixsiar.dir <- find.package("MixSIAR")
 ```
 
@@ -618,5 +621,67 @@ MixSIAR_Plot <- ggplot(MixSiar_results, aes(x = Source)) +
 # Print the plot
 MixSIAR_Plot
 
-ggsave(MixSIAR_Plot, filename = "output/MixSIAR_Results.png", dpi = 600, width = 10, height = 8)
+#ggsave(MixSIAR_Plot, filename = "output/MixSIAR_Results.png", dpi = 600, width = 10, height = 10)
 ```
+
+Splitting them:
+```{r}
+MixSIAR_Plot_Acuta <- ggplot(subset(MixSiar_results, Species == "Pocillopora acuta"), aes(x = Source)) +
+  geom_boxplot(
+    aes(
+      ymin = Lower_2_5 * 100, 
+      lower = Lower_25 * 100, 
+      middle = Median_50 * 100, 
+      upper = Upper_75 * 100, 
+      ymax = Upper_97_5 * 100,
+      fill = ifelse(grepl("Seep", Source), "Seep-derived Heterotrophy",  
+                    ifelse(Source == "Symbiont", "Autotrophy", "Heterotrophy"))
+    ), 
+    stat = "identity",
+    alpha = 0.5
+  ) +
+  geom_point(aes(y = Mean * 100), color = "black", size = 2) +
+  scale_fill_manual(values = c("Autotrophy" = "#21908c", "Heterotrophy" = "#47c16e", "Seep-derived Heterotrophy" = "#fde725"), name = NULL) +
+  labs(y = "Proportional Contribution to Host", x = "") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    axis.text.x = element_text(angle = 30, hjust = 1),
+    legend.position = "bottom",
+    strip.text = element_text(face = "italic")
+  ) + 
+  ylim(0, 100)
+
+ggsave(MixSIAR_Plot_Acuta, filename = "output/MixSIAR_acuta_Results.png", dpi = 600, width = 4.5, height = 4.5)
+```
+
+```{r}
+MixSIAR_Plot_Rus <- ggplot(subset(MixSiar_results, Species == "Porites rus"), aes(x = Source)) +
+  geom_boxplot(
+    aes(
+      ymin = Lower_2_5 * 100, 
+      lower = Lower_25 * 100, 
+      middle = Median_50 * 100, 
+      upper = Upper_75 * 100, 
+      ymax = Upper_97_5 * 100,
+      fill = ifelse(grepl("Seep", Source), "Seep-derived Heterotrophy",  
+                    ifelse(Source == "Symbiont", "Autotrophy", "Heterotrophy"))
+    ), 
+    stat = "identity",
+    alpha = 0.5
+  ) +
+  geom_point(aes(y = Mean * 100), color = "black", size = 2) +
+  scale_fill_manual(values = c("Autotrophy" = "#21908c", "Heterotrophy" = "#47c16e", "Seep-derived Heterotrophy" = "#fde725"), name = NULL) +
+  labs(y = "Proportional Contribution to Host", x = "") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    axis.text.x = element_text(angle = 30, hjust = 1),
+    legend.position = "bottom",
+    strip.text = element_text(face = "italic")
+  ) + 
+  ylim(0, 100)
+
+ggsave(MixSIAR_Plot_Rus, filename = "output/MixSIAR_rus_Results.png", dpi = 600, width = 4.5, height = 4.5)
+```
+
