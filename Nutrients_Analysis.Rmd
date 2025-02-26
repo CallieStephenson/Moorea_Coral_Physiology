@@ -24,6 +24,7 @@ library(glmnet)
 library(ggstats)
 library(stringr)
 library(patchwork)
+library(ggcorrplot)
 ```
 
 ggplot theme
@@ -62,6 +63,16 @@ cor_matrix <- cor(pulse_df)
 corrplot(cor_matrix, method = "number")
 chart.Correlation(pulse_df)
 ```
+
+### Thank you to Chris Wall for the code for this:
+```{r}
+# Compute and show the  result
+corplot <- ggcorrplot(cor_matrix, hc.order = TRUE, type = "lower",
+          lab = TRUE)
+
+ggsave(corplot, filename = "output/Corr_Plot.png", dpi = 600, width = 7, height = 7)
+```
+
 
 PCA:
 
