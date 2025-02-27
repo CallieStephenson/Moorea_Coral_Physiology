@@ -17,6 +17,8 @@ library(MixSIAR)
 library(readr)
 library(ggpubr)
 library(viridis)
+library(cowplot)
+library(patchwork) #need for plot_spacer(). wish i knew how to do this better
 mixsiar.dir <- find.package("MixSIAR")
 ```
 
@@ -175,52 +177,62 @@ Symb_plots <- symb_pc1[,c("pc1", "δ13C_symb", "δ15N_symb", "Species", "Genotyp
 # Find the range for del13C
 min_13C <- min(c(Symb_plots$del13C, Zoop_POM_SI$del13C), na.rm = TRUE)
 max_13C <- max(c(Symb_plots$del13C, Zoop_POM_SI$del13C), na.rm = TRUE)
+```
+#### 13C Plots
+
+```{r}
 # Symbiont
 # symb_13C_plot <- ggplot(data = Symb_plots, aes(y = del13C, x = Species, color = pc1)) +
-#   geom_violin()+
+#   geom_boxplot()+
 #   geom_jitter(width = 0.2, height = 0) +
 #   scale_color_viridis()+
 #   scale_x_discrete(labels = custom_labels) + 
 #   scale_y_continuous(limits = c(min_13C, max_13C)) +
 #   labs(x = "", subtitle = "C. Symbiont 13C")
 
+
 symb_13C_pac_plot <- ggplot(data = Symb_plots %>% filter(Species == "Pocillopora acuta symbiont"), aes(y = del13C, x = pc1, color = pc1, shape = Genotype)) +
-  geom_point() +
+  geom_point(size = 4.0) +
   scale_color_viridis() + 
-  labs(x = "PC1\n", y = "", subtitle = expression("C. δ13C " * italic("P. acuta") * " symbiont")) +
+  labs(x = "PC1\n", y = "δ13C", subtitle = expression(bold("C.")~" δ13C " * italic("P. acuta") * " symbiont")) +
   scale_y_continuous(limits = c(min_13C, max_13C)) + guides(color="none", shape = "none")
 
 symb_13C_pru_plot <- ggplot(data = Symb_plots %>% filter(Species == "Porites rus symbiont"), aes(y = del13C, x = pc1, color = pc1, shape = Genotype)) +
-  geom_point() +
+  geom_point(size = 4.0) +
   scale_color_viridis()+
+  scale_shape_manual(values = c(0, 1, 2, 3, 4, 5)) +
 #  scale_x_discrete(labels = custom_labels) + 
-  labs(x = "PC1\n", y = "",subtitle = expression("D. δ13C " * italic("P. rus") * " symbiont")) +
+  labs(x = "PC1\n", y = "δ13C",subtitle = expression(bold("D.")~" δ13C " * italic("P. rus") * " symbiont")) +
   scale_y_continuous(limits = c(min_13C, max_13C))+ guides(color="none", shape = "none")
-  
+ 
 # Pom
 pom_13C_plot <- ggplot(data = Zoop_POM_SI %>% filter(POM_Zoop == "POM"), aes(y = del13C, x = Seep_Out, color = Seep_Out)) +
-  geom_violin()+
+  geom_boxplot()+
   geom_jitter(width = 0.05, height = 0) + 
-  labs(x = "", y = "δ13C",subtitle = "A. δ13C Particulate Organic Matter")+
+  labs(x = "", y = "δ13C", subtitle =expression(bold("A.")~ " δ13C Particulate Organic Matter"))+
   scale_color_manual(values = c("Out" = "#440154", "Seep" = "#fde725"))+ 
   scale_y_continuous(limits = c(min_13C, max_13C))+ guides(color="none")+
   geom_signif(comparisons = list(c("Out", "Seep")), test = "t.test", map_signif_level = TRUE)
 
 # Zoop
 zoop_13C_plot <- ggplot(data = Zoop_POM_SI %>% filter(POM_Zoop == "ZOOP"), aes(y = del13C, x = Seep_Out, color = Seep_Out)) +
-  geom_violin()+
+  geom_boxplot()+
   geom_jitter(width = 0.05, height = 0) + 
-  labs(x = "", y = "", subtitle = "B. δ13C Zooplankton")+
+  labs(x = "", y = "δ13C", subtitle = expression(bold("B.")~ " δ13C Zooplankton"))+
   scale_color_manual(values = c("Out" = "#440154", "Seep" = "#fde725"))+ 
   scale_y_continuous(limits = c(min_13C, max_13C))+ guides(color="none")
+```
 
+#### 15N Plots
+
+```{r}
 #15N plot
 min_15N <- min(c(Symb_plots$del15N, Zoop_POM_SI$del15N), na.rm = TRUE)
 max_15N <- max(c(Symb_plots$del15N, Zoop_POM_SI$del15N), na.rm = TRUE)
 
 # Symbiont
 # symb_15N_plot <- ggplot(data = Symb_plots, aes(y = del15N, x = Species, color = pc1)) +
-#   geom_violin()+
+#   geom_boxplot()+
 #   geom_jitter(width = 0.2, height = 0) +
 #   scale_color_viridis()+
 #   scale_x_discrete(labels = custom_labels) + 
@@ -228,46 +240,99 @@ max_15N <- max(c(Symb_plots$del15N, Zoop_POM_SI$del15N), na.rm = TRUE)
 #   scale_y_continuous(limits = c(min_15N, max_15N))
 
 
-symb_15N_pac_plot <- ggplot(data = Symb_plots %>% filter(Species == "Pocillopora acuta symbiont"), aes(y = del15N, x = pc1, color = pc1, shape = Genotype)) +
-  geom_point() +
+symb_15N_pac_plot_legend <- ggplot(data = Symb_plots %>% filter(Species == "Pocillopora acuta symbiont"), aes(y = del15N, x = pc1, color = pc1, shape = Genotype)) +
+  geom_point(size = 4.0) +
   scale_color_viridis()+
 #  scale_x_discrete(labels = custom_labels) + 
-  labs(x = "PC1\n", y = "", subtitle = expression("G. δ15N " * italic("P. acuta") * " symbiont")) +
+  labs(x = "PC1\n", y = "δ15N", subtitle = expression(bold("G.")~" δ15N " * italic("P. acuta") * " symbiont")) +
   scale_y_continuous(limits = c(min_15N, max_15N))+ guides(color="none", shape = "none")
 
-symb_15N_pru_plot <- ggplot(data = Symb_plots %>% filter(Species == "Porites rus symbiont"), aes(y = del15N, x = pc1, color = pc1, shape = Genotype)) +
-  geom_point() +
+legend_pacsymb <- ggpubr::get_legend(
+  symb_15N_pac_plot_legend +
+    guides(shape = guide_legend(nrow = 2, title = "Parent Colony", title.position = "top"),
+           color = "none") +
+    theme(legend.position = "bottom"))
+symb_15N_pac_plot <- symb_15N_pac_plot_legend + guides(color="none", shape = "none")
+
+
+symb_15N_pru_plot_legend <- ggplot(data = Symb_plots %>% filter(Species == "Porites rus symbiont"), aes(y = del15N, x = pc1, color = pc1, shape = Genotype)) +
+  geom_point(size = 4.0) +
   scale_color_viridis()+
+  scale_shape_manual(values = c(0, 1, 2, 3, 4, 5)) +
 #  scale_x_discrete(labels = custom_labels) + 
-  labs(x = "PC1\n", y = "", subtitle = expression("H. δ15N " * italic("P. rus") * " symbiont")) +
-  scale_y_continuous(limits = c(min_15N, max_15N))+ guides(color="none", shape = "none")
+  labs(x = "PC1\n", y = "δ15N", subtitle = expression(bold("H.")~" δ15N " * italic("P. rus") * " symbiont")) +
+  scale_y_continuous(limits = c(min_15N, max_15N))
 
+symb_15N_pru_plot <- symb_15N_pru_plot_legend + guides(color="none", shape = "none")
+
+legend_prusymb <- ggpubr::get_legend(
+  symb_15N_pru_plot_legend +
+    guides(shape = guide_legend(nrow = 2, title = "Parent Colony", title.position = "top"),
+           color = "none") +
+    theme(legend.position = "bottom")
+)
+
+legend_symb_color <- ggpubr::get_legend(
+  symb_15N_pru_plot_legend +
+    guides(shape = "none",
+           color = guide_colorbar(title = "PC1", title.position = "top")) +
+    theme(legend.position = "bottom")
+)
 
 # Pom
 pom_15N_plot <- ggplot(data = Zoop_POM_SI %>% filter(POM_Zoop == "POM"), aes(y = del15N, x = Seep_Out, color = Seep_Out)) +
-  geom_violin()+
+  geom_boxplot()+
   geom_jitter(width = 0.05, height = 0) + 
-  labs(x = "", y = "δ15N ", subtitle = "E. δ15N Particulate Organic Matter")+
+  labs(x = "", y = "δ15N ", subtitle = expression(bold("E.")~" δ15N Particulate Organic Matter"))+
   scale_color_manual(values = c("Out" = "#440154", "Seep" = "#fde725"))+
   scale_y_continuous(limits = c(min_15N, max_15N))+ guides(color="none")
 
 # Zoop
-zoop_15N_plot <- ggplot(data = Zoop_POM_SI %>% filter(POM_Zoop == "ZOOP"), aes(y = del15N, x = Seep_Out, color = Seep_Out)) +
-  geom_violin()+
+zoop_15N_plot_legend <- ggplot(data = Zoop_POM_SI %>% filter(POM_Zoop == "ZOOP"), aes(y = del15N, x = Seep_Out, color = Seep_Out)) +
+  geom_boxplot()+
   geom_jitter(width = 0.05, height = 0) + 
-  labs(x = "", y = "", subtitle = "F. δ15N Zooplankton")+
+  labs(x = "", y = "δ15N", subtitle = expression(bold("F.")~" δ15N Zooplankton"))+
   scale_color_manual(values = c("Out" = "#440154", "Seep" = "#fde725"))+
-  scale_y_continuous(limits = c(min_15N, max_15N))+ guides(color="none") +
+  scale_y_continuous(limits = c(min_15N, max_15N))+ 
+  #guides(color="none") +
   geom_signif(comparisons = list(c("Out", "Seep")), test = "t.test", map_signif_level = TRUE)
 
+legend_source <- ggpubr::get_legend(
+  zoop_15N_plot_legend + 
+    guides(color = guide_legend(nrow = 1, title = "Sample Location", title.position = "top")) + 
+    theme(legend.position = "bottom")
+)
+
+zoop_15N_plot <- zoop_15N_plot_legend + guides(color="none")
 #all plots
 # combined_plot_all <- plot_grid(pom_13C_plot, zoop_13C_plot, symb_13C_plot, pom_15N_plot, zoop_15N_plot, symb_15N_plot, ncol = 3)
+```
 
-combined_plot_all <- plot_grid(pom_13C_plot, zoop_13C_plot, symb_13C_pac_plot, symb_13C_pru_plot, pom_15N_plot, zoop_15N_plot, symb_15N_pac_plot, symb_15N_pru_plot, ncol = 4)
+#### Combined plot
+```{r}
+leftplot <- plot_grid(
+  pom_13C_plot, zoop_13C_plot, 
+  pom_15N_plot, zoop_15N_plot, 
+  ncol = 2, align = "hv")
 
-combined_plot_all
+rightplot <- plot_grid(
+  symb_13C_pac_plot, symb_13C_pru_plot, 
+  symb_15N_pac_plot, symb_15N_pru_plot, 
+  ncol = 2, align = "hv")
 
-ggsave(combined_plot_all, filename = "output/Source_Isotopes.png", dpi = 600, width = 15, height = 10)
+plots <- plot_grid(leftplot, rightplot, ncol = 2, align = "hv")
+
+
+legendcolor <- plot_grid(legend_source, legend_symb_color, ncol = 2)
+legendshapes <- plot_grid(plot_spacer(),  # this is why we need patchwork
+                          plot_grid(legend_pacsymb, legend_prusymb, ncol = 2),  # Shape legends only under rightplot
+                          ncol = 2, rel_widths = c(1, 1))  # Keep spacing equal
+
+combined_plot_legend <- plot_grid(plots, legendcolor, legendshapes,
+                                  ncol = 1, rel_heights = c(1, 0.1, 0.1)  # Adjust legend heights
+)
+
+ggsave(combined_plot_legend, filename = "output/Source_Isotopes.png", dpi = 600, width = 15, height = 10)
 ```
 
 
