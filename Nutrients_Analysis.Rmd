@@ -131,23 +131,24 @@ pca_plot <- ggplot(scores, aes(x = -Comp.1, y = Comp.2)) +
   geom_point() +
   geom_segment(data = loadings, aes(x = 0, y = 0, xend = -Comp.1, yend = Comp.2),
                arrow = arrow(length = unit(0.2, "cm")), color = '#084439') +
-  geom_text(data = loadings, aes(x = -Comp.1, y = Comp.2, label = rownames(loadings)),
-            color = '#084439', hjust = -0.2) +
+  # geom_text(data = loadings, aes(x = -Comp.1, y = Comp.2, label = rownames(loadings)),
+  #           color = '#084439', hjust = -0.2) +
   labs(
-    title = "Principal Component Analysis of SGD-related Water Quality Parameters \n",
+    #title = "Principal Component Analysis of SGD-related Water Quality Parameters \n",
     x = "Principal Component 1",
     y = "Principal Component 2"
   ) +
-  theme_minimal(base_size = 15) +
+  theme_light(base_size = 15) +
   theme(
     plot.title = element_text(hjust = 0.5, size = 12, face = "bold"),
-    axis.title = element_text(size = 12)
+    axis.title = element_text(size = 12),
+    panel.background = element_rect(fill = "white")
   ) +
   scale_x_continuous(limits = c(-5, 5)) +
   scale_y_continuous(limits = c(-3, 3))
 
 pca_plot
-#ggsave(pca_plot, filename = "output/PCA_Plot.png", dpi = 600, width = 10, height = 6)
+#ggsave(pca_plot, filename = "output/PCA_Plot.png", dpi = 600, width = 5, height = 4)
 ```
 
 ```{r}
@@ -210,7 +211,8 @@ pac_growth_raw_legend <- ggplot(PAC_model_data_clean, aes(x = pc1, y = Percent_C
   scale_color_fish_d(option = "Coryphaena_hippurus", direction = -1) +
   theme_minimal()+
   theme(plot.background = element_rect(fill = "white"))+
-  guides(shape = guide_legend(title = "Caging Treatment"), color = guide_legend(title = "Parent Colony"))
+  guides(color = guide_legend(order = 1, title = "Parent Colony"),
+         shape = guide_legend(order = 2, title = "Caging Treatment"))
 
 pac_growth_raw <- pac_growth_raw_legend + theme(legend.position = "none")
 
@@ -1597,4 +1599,34 @@ Figure2 <- toprow / bottomrow +
 #ggsave("output/Figure2.png", plot = Figure2, width = 15, height = 8, dpi = 300)
 ```
 
+```{r}
+library(cowplot)
+library(ggpubr)
+
+
+legend_pac <- ggpubr::get_legend(pac_growth_raw_legend +
+                               guides(shape = guide_legend(order = 2,
+                                                           title = "Caging Treatment",
+                                                             title.position = "top"),
+                                      color = guide_legend(order = 1,
+                                                           title = "Parent Colony",
+                                                             title.position = "top")) +
+    theme(legend.position = "right", legend.key.width = unit(0.1, "cm")))
+
+legend_pru <- ggpubr::get_legend(pru_growth_raw_legend +
+                               guides(shape = guide_legend(title = "Caging Treatment",
+                                                             title.position = "top"),
+                                      color = guide_legend(title = "Parent Colony",
+                                                             title.position = "top")) +
+    theme(legend.position = "right", legend.key.width = unit(0.1, "cm")))
+
+
+toprow <- plot_grid(pac_growth_raw, pac_chl_MOD, pac_13C_raw, plot_15N_pc1, legend_pac, ncol = 5)
+bottomrow <- plot_grid(pru_growth_raw, pru_chl_raw, pru_13C_raw, pru_15N_raw, legend_pru, ncol = 5)
+
+Figure2 <- plot_grid(toprow, bottomrow, ncol = 1, align = "hv")
+
+Figure2
+ggsave("output/Figure2.png", plot = Figure2, width = 15, height = 8, dpi = 300)
+```
 

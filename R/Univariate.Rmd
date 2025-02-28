@@ -151,11 +151,12 @@ results_list_caged <- run_lmer_models(model_data, Species, response_caged, predi
 
 
 ```{r}
-results_list$`Pocillopora acuta_Percent_Change`
+results_list$`Porites rus_Percent_Change`
 ```
 
 ```{r}
-results_list$`Pocillopora acuta_FSC.Events_per_cm_2`
+results_list$`Porites rus_Percent_Change`
+results_list$`Porites rus_Chl_ug.cm.2`
 ```
 
 ```{r}
