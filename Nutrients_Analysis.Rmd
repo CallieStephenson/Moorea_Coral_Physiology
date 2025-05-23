@@ -135,8 +135,8 @@ pca_plot <- ggplot(scores, aes(x = -Comp.1, y = Comp.2)) +
   #           color = '#084439', hjust = -0.2) +
   labs(
     #title = "Principal Component Analysis of SGD-related Water Quality Parameters \n",
-    x = "Principal Component 1",
-    y = "Principal Component 2"
+    x = "Principal Component 1 (67.4%)",
+    y = "Principal Component 2 (11.3%)"
   ) +
   theme_light(base_size = 15) +
   theme(
@@ -1116,6 +1116,36 @@ Anova(linear_pe_model_pru)
 
 
 # Heterotrophy
+An SI thing for Chris:  "Plot your C:N vs. d13C to see if there was a strong pattern, plot a regression to it and check that it isn't rapidly increasing etc. Say that you inspected the C:N vs. d13C for patterns, saw none or whatever. Can be an SI thing"
+
+```{r}
+plot_cn_d13c <- ggplot() +
+  geom_point(aes(x = δ13C_symb, y = C_N_ratio_symb, color = Genotype, shape = "Symbiont"), data = response_data) +
+  geom_point(aes(x = δ13C_host, y = C_N_ratio_host, color = Genotype, shape = "Host"), data = response_data) +
+  labs(
+    x = expression(delta^13*C),
+    y = "Carbon to Nitrogen Ratio",
+    shape = "Source"
+  ) + 
+  scale_shape_manual(values = c("Host" = 17, "Symbiont" = 15)) +
+  scale_color_fish_d(option = "Coryphaena_hippurus", direction = -1) +
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",
+    plot.background = element_rect(fill = "white"),
+    strip.text = element_text(face = "italic", size = 14)  # Italic and larger facet labels
+  ) +
+  facet_wrap(~Species)
+
+plot_cn_d13c
+
+
+model_symb <- lmer(C_N_ratio_symb ~ δ13C_symb + (1 | Genotype), data = response_data)
+summary(model_symb)
+model_host <- lmer(C_N_ratio_host ~ δ13C_host + (1 | Genotype), data = response_data)
+summary(model_host)
+```
+
 ## Carbon
 
 ### Pocillopora acuta
@@ -1153,6 +1183,7 @@ linear_carbon_model_pac <- lmer(Δ13C ~ pc1 +
 Anova(linear_carbon_model_pac)
 ```
 Not significant
+
 
 #### Polynomial model:
 ```{r}
@@ -1467,11 +1498,13 @@ ggsave("output/pac_15N_NN_mod.png", plot_15N_NN, height = 7, width = 6)
 linear_nitrogen_host_model_pac <- lmer(δ15N_host ~ pc1 + δ15N_T0_host +
                                   (1|Genotype), data = SI_PAC_model_data)
 Anova(linear_nitrogen_host_model_pac)
+summary(linear_nitrogen_host_model_pac)
 ```
 ```{r}
 linear_nitrogen_symb_model_pac <- lmer(δ15N_symb ~ pc1 + δ15N_T0_symb +
                                   (1|Genotype), data = SI_PAC_model_data)
 Anova(linear_nitrogen_symb_model_pac)
+summary(linear_nitrogen_symb_model_pac)
 ```
 wow. that's craZy. neither are significantly changing, but their relationship to each other is?
 what if we filter out those super low ones:
