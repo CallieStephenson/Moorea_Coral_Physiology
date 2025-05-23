@@ -25,6 +25,8 @@ library(ggstats)
 library(stringr)
 library(patchwork)
 library(ggcorrplot)
+library(cowplot)
+library(ggpubr)
 ```
 
 ggplot theme
@@ -196,7 +198,9 @@ PRU_model_data_caged_only <- PRU_model_data %>%
 ### plot raw
 ```{r}
 PAC_model_data_clean <- PAC_model_data[!is.na(PAC_model_data$Percent_Change), ]
-pac_growth_raw_legend <- ggplot(PAC_model_data_clean, aes(x = pc1, y = Percent_Change, color = Genotype, shape = Cage_Uncaged)) +
+pac_growth_raw_legend <- ggplot(PAC_model_data_clean, aes(x = pc1, y = Percent_Change, 
+                                                          #color = Genotype, 
+                                                          shape = Cage_Uncaged)) +
   geom_point() +
   labs(
     x = "PC1",
@@ -268,7 +272,9 @@ This model does not support the hypothesis that nutrients from SGD contribute to
 
 ### plot raw
 ```{r}
-pru_growth_raw_legend <- ggplot(PRU_model_data, aes(x = pc1, y = Percent_Change, color = Genotype, shape = Cage_Uncaged)) +
+pru_growth_raw_legend <- ggplot(PRU_model_data, aes(x = pc1, y = Percent_Change, 
+                                                    #color = Genotype, 
+                                                    shape = Cage_Uncaged)) +
   geom_point() +
   scale_shape_manual(
     values = c("A" = 15, "B" = 17, "C" = 16),
@@ -534,7 +540,9 @@ aic_value <- AIC(linear_chl_model_pac)
 
 # Create the plot with the fitted line
 pac_chl_MOD <-ggplot() +
-  geom_point(aes(x = pc1, y = Chl_ug.cm.2, color = Genotype, shape = Cage_Uncaged), data = PAC_model_data) +
+  geom_point(aes(x = pc1, y = Chl_ug.cm.2, 
+                 #color = Genotype, 
+                 shape = Cage_Uncaged), data = PAC_model_data) +
   labs(x = "PC1", 
        y = expression(paste("Chlorophyll density (μg ", cm^2, ")")),
       title = " ",
@@ -783,7 +791,9 @@ plot_chl_growth <- ggplot() +
 
 ## Porites rus
 ```{r}
-pru_chl_raw <- ggplot(PRU_model_data, aes(x = pc1, y = Chl_ug.cm.2, color = Genotype, shape = Cage_Uncaged)) +
+pru_chl_raw <- ggplot(PRU_model_data, aes(x = pc1, y = Chl_ug.cm.2, 
+                                          #color = Genotype, 
+                                          shape = Cage_Uncaged)) +
   geom_point() +
   labs(x = "PC1", 
        y = expression(paste("Chlorophyll density (μg ", cm^2, ")")),
@@ -1158,8 +1168,10 @@ ggplot(data = SI_PAC_model_data, (aes(y=Δ13C, x= pc1))) +
          geom_point()
 
 pac_13C_raw <- ggplot(PAC_model_data %>% 
-  filter(!is.na(Δ13C)), aes(x = pc1, y = Δ13C, color = Genotype)) +
-  geom_point() +
+  filter(!is.na(Δ13C)), aes(x = pc1, y = Δ13C
+                            #color = Genotype
+                            )) +
+  geom_point(shape = 15) +
   labs(x = "PC1", 
        y = expression(delta^13*C[H - S]),
       title = " ") +
@@ -1203,8 +1215,9 @@ ggplot(data = SI_PRU_model_data, (aes(y=Δ13C, x= pc1))) +
          geom_point()
 
 pru_13C_raw <- ggplot(PRU_model_data %>% 
-  filter(!is.na(Δ13C)), aes(x = pc1, y = Δ13C, color = Genotype)) +
-  geom_point() +
+  filter(!is.na(Δ13C)), aes(x = pc1, y = Δ13C#, color = Genotype
+                            )) +
+  geom_point(shape = 15) +
   labs(x = "PC1", 
        y = expression(delta^13*C[H - S]),
       title = " ") +
@@ -1308,7 +1321,9 @@ prediction_data <- prediction_data %>%
 #plot
 plot_15N_pc1 <- ggplot() +
   #points
-  geom_point(aes(x = pc1, y = Δ15N, color = Genotype), data = SI_PAC_model_data) +
+  geom_point(aes(x = pc1, y = Δ15N 
+                 #color = Genotype,
+                 ), shape = 15, data = SI_PAC_model_data) +
   labs(x = "PC1", 
        y = expression(delta^15*N[H - S]),
       title = " ") +
@@ -1534,8 +1549,10 @@ ggplot(data = SI_PRU_model_data, (aes(y=Δ15N, x= pc1))) +
          geom_point()
 
 pru_15N_raw <- ggplot(PRU_model_data %>% 
-  filter(!is.na(Δ13C)), aes(x = pc1, y = Δ13C, color = Genotype)) +
-  geom_point() +
+  filter(!is.na(Δ15N)), aes(x = pc1, y = Δ15N, 
+                            #color = Genotype
+                            )) +
+  geom_point(shape = 15) +
   labs(x = "PC1", 
        y = expression(delta^15*N[H - S]),
       title = " ") +
@@ -1633,10 +1650,6 @@ Figure2 <- toprow / bottomrow +
 ```
 
 ```{r}
-library(cowplot)
-library(ggpubr)
-
-
 legend_pac <- ggpubr::get_legend(pac_growth_raw_legend +
                                guides(shape = guide_legend(order = 2,
                                                            title = "Caging Treatment",
@@ -1644,7 +1657,7 @@ legend_pac <- ggpubr::get_legend(pac_growth_raw_legend +
                                       color = guide_legend(order = 1,
                                                            title = "Parent Colony",
                                                              title.position = "top")) +
-    theme(legend.position = "right", legend.key.width = unit(0.1, "cm")))
+    theme(legend.position = "bottom", legend.key.width = unit(0.1, "cm")))
 
 legend_pru <- ggpubr::get_legend(pru_growth_raw_legend +
                                guides(shape = guide_legend(title = "Caging Treatment",
@@ -1654,12 +1667,13 @@ legend_pru <- ggpubr::get_legend(pru_growth_raw_legend +
     theme(legend.position = "right", legend.key.width = unit(0.1, "cm")))
 
 
-toprow <- plot_grid(pac_growth_raw, pac_chl_MOD, pac_13C_raw, plot_15N_pc1, legend_pac, ncol = 5)
-bottomrow <- plot_grid(pru_growth_raw, pru_chl_raw, pru_13C_raw, pru_15N_raw, legend_pru, ncol = 5)
+toprow <- plot_grid(pac_growth_raw, pac_chl_MOD, pac_13C_raw, plot_15N_pc1, ncol = 4)
+bottomrow <- plot_grid(pru_growth_raw, pru_chl_raw, pru_13C_raw, pru_15N_raw, ncol = 4)
+legend <- plot_grid(legend_pac, ncol = 4)
 
-Figure2 <- plot_grid(toprow, bottomrow, ncol = 1, align = "hv")
+Figure2 <- plot_grid(toprow, bottomrow, legend, ncol = 1, align = "hv")
 
 Figure2
-ggsave("output/Figure2.png", plot = Figure2, width = 15, height = 8, dpi = 300)
+ggsave("output/Figure2.png", plot = Figure2, width = 15, height = 12, dpi = 300)
 ```
 

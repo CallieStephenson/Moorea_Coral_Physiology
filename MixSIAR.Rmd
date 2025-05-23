@@ -707,12 +707,12 @@ MixSIAR_Plot_Acuta <- ggplot(subset(MixSiar_results, Species == "Pocillopora acu
   ) +
   geom_point(aes(y = Mean * 100), color = "black", size = 2) +
   scale_fill_manual(values = c("Autotrophy" = "#21908c", "Heterotrophy" = "#47c16e", "Seep-derived Heterotrophy" = "#fde725"), name = NULL) +
-  labs(y = "Proportional Contribution to Host", x = "") +
+  labs(y = "Contribution to Host (%)", x = "") +
   theme_minimal() +
   theme(
     plot.title = element_text(hjust = 0.5),
     axis.text.x = element_text(angle = 30, hjust = 1),
-    legend.position = "bottom",
+    legend.position = "none", #removed
     strip.text = element_text(face = "italic")
   ) + 
   ylim(0, 100)
@@ -729,15 +729,15 @@ MixSIAR_Plot_Rus <- ggplot(subset(MixSiar_results, Species == "Porites rus"), ae
       middle = Median_50 * 100, 
       upper = Upper_75 * 100, 
       ymax = Upper_97_5 * 100,
-      fill = ifelse(grepl("Seep", Source), "Seep-derived Heterotrophy",  
-                    ifelse(Source == "Symbiont", "Autotrophy", "Heterotrophy"))
+      fill = ifelse(grepl("Seep", Source), "Seep",  
+                    ifelse(Source == "Symbiont", "Autotrophy", "Ambient Seawater"))
     ), 
     stat = "identity",
     alpha = 0.5
   ) +
   geom_point(aes(y = Mean * 100), color = "black", size = 2) +
-  scale_fill_manual(values = c("Autotrophy" = "#21908c", "Heterotrophy" = "#47c16e", "Seep-derived Heterotrophy" = "#fde725"), name = NULL) +
-  labs(y = "Proportional Contribution to Host", x = "") +
+  scale_fill_manual(values = c("Autotrophy" = "#21908c", "Ambient Seawater" = "#47c16e", "Seep" = "#fde725"), name = NULL) +
+  labs(y = "Contribution to Host (%)", x = "") +
   theme_minimal() +
   theme(
     plot.title = element_text(hjust = 0.5),
@@ -749,4 +749,5 @@ MixSIAR_Plot_Rus <- ggplot(subset(MixSiar_results, Species == "Porites rus"), ae
 
 ggsave(MixSIAR_Plot_Rus, filename = "output/MixSIAR_rus_Results.png", dpi = 600, width = 4.5, height = 4.5)
 ```
+
 

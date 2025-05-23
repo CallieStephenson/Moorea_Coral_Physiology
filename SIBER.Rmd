@@ -409,12 +409,14 @@ ellipse.rus.plot <- first.rus.plot +
   guides(color = guide_legend(title = ""),
          fill = guide_legend(title = ""),
          shape = guide_legend(title = "")) +
+  theme(legend.position = "none")
   #annotation
-  geom_text(data = data.frame(label = c("40% SEAc = 72.18% \n 95% SEAc = 92.69%")), 
-            aes(x = -18, y = 5, label = label), 
-            inherit.aes = FALSE,  # Don't inherit aesthetics from the main plot
-            size = 3,  # Adjust text size as needed
-            hjust = 0, vjust = 0)
+  # geom_text(data = data.frame(label = c("40% SEAc = 72.18% \n 95% SEAc = 92.69%")), 
+  #           aes(x = -18, y = 5, label = label), 
+  #           inherit.aes = FALSE,  # Don't inherit aesthetics from the main plot
+  #           size = 3,  # Adjust text size as needed
+  #           hjust = 0, vjust = 0)
+#removed annotation per NS comments
 
 
 print(ellipse.rus.plot)
@@ -442,13 +444,15 @@ ellipse.acuta.plot <- first.acuta.plot +
   scale_shape_manual(values = c(16, 17), labels = c("Host", "Symbiont")) +
   guides(color = guide_legend(title = ""),
          fill = guide_legend(title = ""),
-         shape = guide_legend(title = ""))+
-  #annotation
-  geom_text(data = data.frame(label = c("40% SEAc = 21.94% \n 95% SEAc = 66.60%")), 
-            aes(x = -18, y = 5, label = label), 
-            inherit.aes = FALSE,  # Don't inherit aesthetics from the main plot
-            size = 3,  # Adjust text size as needed
-            hjust = 0, vjust = 0)
+         shape = guide_legend(title = "")) +
+  theme(legend.position = "none")
+  # #annotation
+  # geom_text(data = data.frame(label = c("40% SEAc = 21.94% \n 95% SEAc = 66.60%")), 
+  #           aes(x = -18, y = 5, label = label), 
+  #           inherit.aes = FALSE,  # Don't inherit aesthetics from the main plot
+  #           size = 3,  # Adjust text size as needed
+  #           hjust = 0, vjust = 0)
+  #removed annotation per NS comments
 
 print(ellipse.acuta.plot)
 ggsave("output/acutasiber.png", plot = ellipse.acuta.plot,  width = 4, height = 4, dpi = 600)
