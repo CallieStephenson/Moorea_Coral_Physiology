@@ -751,3 +751,74 @@ ggsave(MixSIAR_Plot_Rus, filename = "output/MixSIAR_rus_Results.png", dpi = 600,
 ```
 
 
+# Varying the TDF
+
+## PAC
+
+```{r PAC mix}
+mix.filename <- "data/PAC_MixSIAR_Consumer.csv"
+mix <- load_mix_data(filename=mix.filename, 
+                     iso_names=c("d13C","d15N"), 
+                     fac_random = NULL,           # No random effects
+                     fac_nested = NULL,
+                     factors = NULL,
+                     cont_effects=NULL)
+```
+
+```{r PAC source}
+source.filename <- "data/PAC_MixSIAR_Source.csv"
+
+source <- load_source_data(filename=source.filename,
+                           source_factors = NULL,
+                           conc_dep=FALSE, 
+                           data_type="means", 
+                           mix)
+```
+This is where the change is!
+```{r PAC Discrim}
+discr.filename <- "/Users/calliestephenson/Documents/GitHub/MooreaCoralFish_CS/data/discr2.csv"
+discr <- load_discr_data(filename=discr.filename, mix)
+```
+
+```{r}
+jags.1 <- run_model(run="normal", mix, source, discr, model_filename)
+```
+### Output
+```{r}
+output_JAGS(jags.1, mix, source, output_options)
+```
+
+## PRU
+```{r PRU mix}
+mix.filename <- "data/PRU_MixSIAR_Consumer.csv"
+mix <- load_mix_data(filename=mix.filename, 
+                     iso_names=c("d13C","d15N"), 
+                     fac_random = NULL,           # No random effects
+                     fac_nested = NULL,
+                     factors = NULL,
+                     cont_effects=NULL)
+```
+
+```{r PRU source}
+source.filename <- "data/PRU_MixSIAR_Source.csv"
+
+source <- load_source_data(filename=source.filename,
+                           source_factors = NULL,
+                           conc_dep=FALSE, 
+                           data_type="means", 
+                           mix)
+```
+
+```{r PAC/PRU Discrim}
+discr.filename <- "data/discr2.csv"
+discr <- load_discr_data(filename=discr.filename, mix)
+```
+
+```{r}
+jags.1 <- run_model(run="normal", mix, source, discr, model_filename)
+```
+### Output
+```{r}
+output_JAGS(jags.1, mix, source, output_options)
+```
+
