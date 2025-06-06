@@ -72,7 +72,7 @@ chart.Correlation(pulse_df)
 corplot <- ggcorrplot(cor_matrix, hc.order = TRUE, type = "lower",
           lab = TRUE)
 
-ggsave(corplot, filename = "output/Corr_Plot.png", dpi = 600, width = 7, height = 7)
+#ggsave(corplot, filename = "output/Corr_Plot.png", dpi = 600, width = 7, height = 7)
 ```
 
 
@@ -370,7 +370,7 @@ pac_symb_raw <- ggplot(PAC_model_data, aes(x = pc1, y = log10(FSC.Events_per_cm_
 
 pac_symb_raw
 
-ggsave("output/pac_symb_nutrientpca_raw.png",pac_symb_raw, height = 5, width = 5.5)
+#ggsave("output/pac_symb_nutrientpca_raw.png",pac_symb_raw, height = 5, width = 5.5)
 ```
 
 ### linear model
@@ -411,7 +411,7 @@ pru_symb_raw <- ggplot(PRU_model_data, aes(x = pc1, y = log10(FSC.Events_per_cm_
 
 pru_symb_raw
 
-ggsave("output/pru_symb_nutrientpca_raw.png",pru_symb_raw, height = 5, width = 5.5)
+#ggsave("output/pru_symb_nutrientpca_raw.png",pru_symb_raw, height = 5, width = 5.5)
 ```
 
 ### linear model
@@ -554,9 +554,9 @@ pac_chl_MOD <-ggplot() +
   geom_ribbon(data = prediction_data, aes(x = pc1, ymin = lower, ymax = upper), alpha = 0.2, fill = "#21908c") +  
   #annotations
   annotate("text", y = 3.5, x = -4,
-         label = paste("p =", round(p_values["pc1"], 6),
-                       "\nMarginal R² =", round(marginal_r2, 3),
-                       "\nConditional R² =", round(conditional_r2, 3)),
+         label = paste("p =", round(p_values["pc1"], 2),
+                       "\nMarginal R² =", round(marginal_r2, 2),
+                       "\nConditional R² =", round(conditional_r2, 2)),
          hjust = 0, vjust = 0, size = 3) +
   theme_minimal() +
   theme(legend.position="none", #you moved this for Figure2
@@ -806,7 +806,7 @@ pru_chl_raw <- ggplot(PRU_model_data, aes(x = pc1, y = Chl_ug.cm.2,
 
 pru_chl_raw
 
-ggsave("output/pru_chl_nutrientpca_raw.png",pru_chl_raw, height = 5, width = 5.5)
+#ggsave("output/pru_chl_nutrientpca_raw.png",pru_chl_raw, height = 5, width = 5.5)
 ```
 
 ### linear
@@ -1229,7 +1229,7 @@ pru_13C_raw <- ggplot(PRU_model_data %>%
 
 pru_13C_raw
 
-ggsave("output/pru_13C_nutrientpca_raw.png",pru_13C_raw, height = 5, width = 5.5)
+#ggsave("output/pru_13C_nutrientpca_raw.png",pru_13C_raw, height = 5, width = 5.5)
 ```
 
 #### Linear model:
@@ -1274,7 +1274,7 @@ pac_15N_raw <- ggplot(PAC_model_data %>%
 
 pac_15N_raw
 
-ggsave("output/pac_15N_nutrientpca_raw.png",pac_15N_raw, height = 5, width = 5.5)
+#ggsave("output/pac_15N_nutrientpca_raw.png",pac_15N_raw, height = 5, width = 5.5)
 ```
 
 #### Linear model:
@@ -1320,7 +1320,6 @@ prediction_data <- prediction_data %>%
 
 #plot
 plot_15N_pc1 <- ggplot() +
-  #points
   geom_point(aes(x = pc1, y = Δ15N 
                  #color = Genotype,
                  ), shape = 15, data = SI_PAC_model_data) +
@@ -1335,11 +1334,11 @@ plot_15N_pc1 <- ggplot() +
   geom_line(data = prediction_data, aes(x = pc1, y = fit), color = "#21908c") +  # Add the fitted line
   geom_ribbon(data = prediction_data, aes(x = pc1, ymin = lower, ymax = upper), alpha = 0.2, fill = "#21908c") +
   #annotations
-  annotate("text", y = -0.2, x = -4,
-         label = paste("p =", round(p_values["pc1"], 6),
-                       "\nMarginal R² =", round(marginal_r2, 3),
-                       "\nConditional R² =", round(conditional_r2, 3)),
-         hjust = 0, size = 3)
+  annotate("text", y = 1.2, x = -0.8,
+         label = paste("p =", round(p_values["pc1"], 2),
+                       "\nMarginal R² =", round(marginal_r2, 2),
+                       "\nConditional R² =", round(conditional_r2, 2)),
+         hjust = 0, vjust = 0, size = 3)
 
 plot_15N_pc1
 #ggsave("output/pac_15N_pca_mod.png", plot_15N_pc1, height = 7, width = 6)
@@ -1448,7 +1447,7 @@ plot_15N_po4 <-ggplot() +
         plot.background = element_rect(fill = "white"))
 
 plot_15N_po4
-ggsave("output/pac_15N_p04_mod.png", plot_15N_po4, height = 7, width = 6)
+#ggsave("output/pac_15N_p04_mod.png", plot_15N_po4, height = 7, width = 6)
 ```
 
 But, we're talking about nitrogen, so lets look at the n sources
@@ -1504,7 +1503,7 @@ plot_15N_NN <-ggplot() +
         plot.background = element_rect(fill = "white"))
 
 plot_15N_NN
-ggsave("output/pac_15N_NN_mod.png", plot_15N_NN, height = 7, width = 6)
+#ggsave("output/pac_15N_NN_mod.png", plot_15N_NN, height = 7, width = 6)
 ```
 
 
@@ -1564,7 +1563,7 @@ pru_15N_raw <- ggplot(PRU_model_data %>%
 
 pru_15N_raw
 
-ggsave("output/pru_15N_nutrientpca_raw.png",pru_15N_raw, height = 5, width = 5.5)
+#ggsave("output/pru_15N_nutrientpca_raw.png",pru_15N_raw, height = 5, width = 5.5)
 ```
 
 #### Linear model:
@@ -1633,38 +1632,39 @@ cat("F-statistic:", f_stat, "\n")
 ```
 
 #Figure 2
-Using Patchwork
 
 ```{r}
-# Combine the plots in one row and collect the legends
+legend_pac <- ggpubr::get_legend(
+  pac_growth_raw_legend +
+    guides(
+      shape = guide_legend(
+        order = 2,
+        title = "Caging Treatment",
+        title.position = "top"
+      ),
+      color = guide_legend(
+        order = 1,
+        title = "Parent Colony",
+        title.position = "top"
+      )
+    ) +
+    theme(
+      legend.position = "bottom",
+      legend.key.width = unit(0.1, "cm")
+    )
+)
 
-toprow <- pac_growth_raw_legend + pac_chl_MOD + pac_13C_raw + plot_15N_pc1 + 
-           plot_layout(ncol = 4, guides = "collect") 
-bottomrow <- pru_growth_raw_legend + pru_chl_raw + pru_13C_raw + pru_15N_raw + 
-           plot_layout(ncol = 4, guides = "collect")
-
-Figure2 <- toprow / bottomrow + 
-           plot_annotation(tag_levels = 'A')
-
-#ggsave("output/Figure2.png", plot = Figure2, width = 15, height = 8, dpi = 300)
-```
-
-```{r}
-legend_pac <- ggpubr::get_legend(pac_growth_raw_legend +
-                               guides(shape = guide_legend(order = 2,
-                                                           title = "Caging Treatment",
-                                                             title.position = "top"),
-                                      color = guide_legend(order = 1,
-                                                           title = "Parent Colony",
-                                                             title.position = "top")) +
-    theme(legend.position = "bottom", legend.key.width = unit(0.1, "cm")))
-
-legend_pru <- ggpubr::get_legend(pru_growth_raw_legend +
-                               guides(shape = guide_legend(title = "Caging Treatment",
-                                                             title.position = "top"),
-                                      color = guide_legend(title = "Parent Colony",
-                                                             title.position = "top")) +
-    theme(legend.position = "right", legend.key.width = unit(0.1, "cm")))
+legend_pru <- ggpubr::get_legend(
+  pru_growth_raw_legend +
+    guides(
+      shape = guide_legend(title = "Caging Treatment", title.position = "top"),
+      color = guide_legend(title = "Parent Colony", title.position = "top")
+    ) +
+    theme(
+      legend.position = "right",
+      legend.key.width = unit(0.1, "cm")
+    )
+)
 
 
 toprow <- plot_grid(pac_growth_raw, pac_chl_MOD, pac_13C_raw, plot_15N_pc1, ncol = 4)
@@ -1674,6 +1674,12 @@ legend <- plot_grid(legend_pac, ncol = 4)
 Figure2 <- plot_grid(toprow, bottomrow, legend, ncol = 1, align = "hv")
 
 Figure2
-ggsave("output/Figure2.png", plot = Figure2, width = 15, height = 12, dpi = 300)
+ggsave(
+  "output/Figure2.png",
+  plot = Figure2,
+  width = 12,
+  height = 10,
+  dpi = 500
+)
 ```
 
