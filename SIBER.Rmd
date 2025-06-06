@@ -351,6 +351,7 @@ first.acuta.plot <- ggplot(data = demo.siber.data %>% filter(community=="Pocillo
   theme(text = element_text(size=15)) +
   theme_minimal() +
   theme(strip.text = element_text(face = "italic"))
+
 print(first.acuta.plot)
 ```
 
@@ -384,7 +385,7 @@ ellipse.plot <- first.plot +
                type = "norm",
                geom = "polygon") + 
   scale_colour_viridis_d(end = 0.5) + 
-  scale_fill_viridis_d(end = 0.5)
+  scale_fill_viridis_d(end = 0.5) + coord_fixed()
 print(ellipse.plot)
 
 ellipse.rus.plot <- first.rus.plot + 
@@ -409,7 +410,11 @@ ellipse.rus.plot <- first.rus.plot +
   guides(color = guide_legend(title = ""),
          fill = guide_legend(title = ""),
          shape = guide_legend(title = "")) +
-  theme(legend.position = "none")
+  theme(legend.position = "none",
+        axis.text = element_text(size = 16)) + 
+  scale_y_continuous(breaks = scales::pretty_breaks(n = 6), limits = c(3,9)) + 
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 6), limits = c(-18, -11)) + coord_fixed()
+
   #annotation
   # geom_text(data = data.frame(label = c("40% SEAc = 72.18% \n 95% SEAc = 92.69%")), 
   #           aes(x = -18, y = 5, label = label), 
@@ -445,7 +450,11 @@ ellipse.acuta.plot <- first.acuta.plot +
   guides(color = guide_legend(title = ""),
          fill = guide_legend(title = ""),
          shape = guide_legend(title = "")) +
-  theme(legend.position = "none")
+  theme(legend.position = "none",
+        axis.text = element_text(size = 16))+ 
+  scale_y_continuous(breaks = scales::pretty_breaks(n = 6), limits = c(3,9)) + 
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 6), limits = c(-18, -11)) + coord_fixed()
+
   # #annotation
   # geom_text(data = data.frame(label = c("40% SEAc = 21.94% \n 95% SEAc = 66.60%")), 
   #           aes(x = -18, y = 5, label = label), 
