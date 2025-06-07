@@ -404,8 +404,35 @@ discr <- load_discr_data(filename=discr.filename, mix)
 ```
 
 ## Plot
+```{r PAC Plot}
+#MixSiar function that makes the plot as a ggobject
+p <- plot_data(filename="PAC_isospace_plot", plot_save_pdf=FALSE, plot_save_png=FALSE,return_obj=TRUE, mix,source, discr)
+
+#code that removes the labels
+#p$layers <- p$layers[!sapply(p$layers, function(x) inherits(x$geom, c("GeomText", "GeomLabel")))]
+
+acuta_source_plot <- p + theme_minimal() +
+  theme(
+    axis.text.x = element_text(size = 16),
+    axis.text.y = element_text(size = 16)
+  ) +
+  scale_y_continuous(breaks = scales::pretty_breaks(n = 6), limits = c(5, 12)) + 
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 6), limits = c(-23, -11))
+
+ggsave("output/MIXSIARacutasource.png", plot = acuta_source_plot, width = 4, height = 4, dpi = 600)
+```
+Remove
 ```{r}
-plot_data(filename="PAC_isospace_plot", plot_save_pdf=FALSE, plot_save_png=TRUE, mix,source, discr)
+plot_data_two_iso(
+  filename = "PAC_isospace_plot",
+  plot_save_pdf = FALSE,
+  plot_save_png = TRUE,
+  isotopes = c(1, 2),
+  mix = mix,
+  source = source,
+  discr = discr
+)
+
 ```
 
 ```{r}
@@ -502,14 +529,21 @@ MixSIAR_PAC <- ggplot(PAC_MixSIAR, aes(x = Source)) +
   ) +
   geom_point(aes(y = Mean * 100), color = "black", size = 2) +  # Add mean points
   scale_fill_manual(values = c("Autotrophy" = "#21908c", "Heterotrophy" = "#47c16e", "Seep-derived \n Heterotrophy" = "#fde725"), name = NULL) +  # Add yellow for Seep
-  labs(title = my_title, y = "Proportional Contribution", x="") +
-  theme_minimal() +  # Keep this and combine the next theme settings
+  labs(y = "Contribution to Host (%)", x = "") +
+  theme_minimal() + 
+  scale_y_continuous(limits = c(0, 100)) +
   theme(
     plot.title = element_text(hjust = 0.5),  # Center the title
-    axis.text.x = element_text(angle = 45, hjust = 1) 
-  )
+    axis.text.x = element_text(angle = 30, hjust = 1, size = 12),
+    legend.position = "none",
+    axis.text.y = element_text(size = 16),
+    axis.title.y = element_text(size = 18))
 
 MixSIAR_PAC
+
+#ggsave
+ggsave("output/MIXSIARresultspac.png", plot = MixSIAR_PAC,  width = 4, height = 4, dpi = 600)
+
 ```
 
 # PRU
@@ -541,7 +575,23 @@ discr <- load_discr_data(filename=discr.filename, mix)
 
 ## Plot
 ```{r}
-plot_data(filename="PRU_isospace_plot", plot_save_pdf=TRUE, plot_save_png=FALSE, mix,source, discr)
+#MixSiar function that makes the plot as a ggobject
+q<- plot_data(filename="PRU_isospace_plot", plot_save_pdf=FALSE, plot_save_png=FALSE,return_obj=TRUE, mix,source, discr)
+
+#code that removes the labels
+q$layers <- q$layers[!sapply(q$layers, function(x) inherits(x$geom, c("GeomText", "GeomLabel")))]
+
+rus_source_plot <- q+ theme_minimal() +
+  theme(
+    axis.text.x = element_text(size = 16),
+    axis.text.y = element_text(size = 16)
+  ) +
+  scale_y_continuous(breaks = scales::pretty_breaks(n = 6), limits = c(5, 12)) + 
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 6), limits = c(-23, -11))
+
+
+ggsave("output/MIXSIARrussource.png", plot = rus_source_plot, width = 4, height = 4, dpi = 600)
+
 ```
 
 ## Plot Prior
@@ -615,7 +665,6 @@ PRU_MixSIAR$Source <- factor(PRU_MixSIAR$Source, levels = PRU_MixSIAR$Source[ord
 ```
 
 ```{r Whisker Plot PRU}
-my_title <- expression(paste(italic("Porites rus")))
 # Assuming PRU_MixSIAR is your dataframe
 MixSIAR_PRU <- ggplot(PRU_MixSIAR, aes(x = Source)) +
   geom_boxplot(
@@ -633,15 +682,20 @@ MixSIAR_PRU <- ggplot(PRU_MixSIAR, aes(x = Source)) +
   ) +
   geom_point(aes(y = Mean * 100), color = "black", size = 2) +  # Add mean points
   scale_fill_manual(values = c("Autotrophy" = "#21908c", "Heterotrophy" = "#47c16e", "Seep-derived \n Heterotrophy" = "#fde725"), name = NULL) +  # Add yellow for Seep
-  labs(title = my_title, y = "Proportional Contribution", x = "") +
-  theme_minimal() +  # Keep this and combine the next theme settings
+  labs(y = "Contribution to Host (%)", x = "") +
+  theme_minimal() + 
+  scale_y_continuous(limits = c(0, 100)) +
   theme(
     plot.title = element_text(hjust = 0.5),  # Center the title
-    axis.text.x = element_text(angle = 45, hjust = 1) 
-  )
+    axis.text.x = element_text(angle = 30, hjust = 1, size = 12),
+    legend.position = "none",
+    axis.text.y = element_text(size = 16),
+    axis.title.y = element_text(size = 18))
 
 # Print the plot
 MixSIAR_PRU
+
+ggsave("output/MIXSIARresultspru.png", plot = MixSIAR_PRU,  width = 4, height = 4, dpi = 600)
 ```
 
 # Plotting Results Together
