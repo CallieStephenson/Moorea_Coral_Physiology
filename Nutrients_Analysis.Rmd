@@ -234,29 +234,62 @@ anova(linear_growth_model_pac)
 ```
 
 This model does not support the hypothesis that nutrients from SGD contribute to the variance in calcification in Pocillopora acuta
-### linear pc2
+
+#### Investigate Univariate Models
 ```{r}
-linear_growth_model_pac_pc2 <- lmerTest::lmer(Percent_Change ~ pc2 +
-                                  (1|Genotype)+ (1|Cage_Uncaged), data = PAC_model_data)
-#check_model(linear_growth_model_pac)
-#summary(linear_growth_model_pac)
-Anova(linear_growth_model_pac_pc2)
+# Define the data and random effects
+random_effects <- "(1|Genotype) + (1|Cage_Uncaged)"
+
+# Define the predictors
+predictors <- c("Low_Tide_Mean_Salinity", "Low_Tide_Mean_NN_umolL", 
+                "Low_Tide_Mean_Phosphate_umolL", "Low_Tide_Mean_Silicate_umolL", 
+                "Low_Tide_Mean_TA", "Low_Tide_Mean_pH")
+
+predictors <- pulse_columns
+
+# Initialize a results dataframe
+results <- data.frame(Variable = character(),
+                      Beta = numeric(),
+                      P_Value = numeric(), 
+                      Marginal_R2 = numeric(), 
+                      Conditional_R2 = numeric(),
+                      AIC = numeric(),
+                      stringsAsFactors = FALSE)
+
+# Loop through each predictor
+for (variable in predictors) {
+  # Construct the formula dynamically
+  formula <- as.formula(paste("Percent_Change ~", variable, "+", random_effects))
+  
+  # Fit the model
+  model <- lmer(formula, data = PAC_model_data)
+  
+  # Get the p-value from Anova()
+  p_value <- Anova(model)[[3]]
+  # Extract the beta (fixed-effect coefficient for the predictor)
+  beta_value <- fixef(model)[[variable]] 
+  
+  # Get R^2 values
+  r2_values <- r.squaredGLMM(model)
+  marginal_r2 <- r2_values[1]  # Marginal R^2
+  conditional_r2 <- r2_values[2]  # Conditional R^2
+  
+  # Get AIC values
+  aic_value <- AIC(model)
+  
+  # Append results to the dataframe
+  results <- rbind(results, 
+                   data.frame(Variable = variable, 
+                              Beta = beta_value,
+                              P_Value = p_value, 
+                              Marginal_R2 = marginal_r2, 
+                              Conditional_R2 = conditional_r2,
+                              AIC = aic_value))
+}
+
+# Display the results
+print(results[order(results$AIC),])
 ```
-### linear plus temp
-```{r}
-temp_columns <- names(explanatory_variables)[grepl("Temperature", names(all_nut)) & 
-                                     !grepl("Low_Tide_Mean",names(all_nut))]
-
-PAC_model_data_temp <- left_join(PAC_model_data, explanatory_variables[,c("Pin_Number", temp_columns)])
-
-linear_growth_model_pac_temp <- lmerTest::lmer(Percent_Change ~ pc1 + (1|sd_Temperature) +
-                                  (1|Genotype) + (1|Cage_Uncaged), data = PAC_model_data_temp)
-
-#check_model(linear_growth_model_pac_temp)
-summary(linear_growth_model_pac_temp)
-anova(linear_growth_model_pac_temp)
-```
-
 ### polynomial model: 
 
 ```{r}
@@ -301,6 +334,64 @@ Anova(linear_growth_model_pru)
 ```
 
 We do not find support for pc1 affecting growth of Porites rus in a linear fashion
+
+
+#### Investigate Univariate Models
+```{r}
+# Define the data and random effects
+random_effects <- "(1|Genotype) + (1|Cage_Uncaged)"
+
+# Define the predictors
+predictors <- c("Low_Tide_Mean_Salinity", "Low_Tide_Mean_NN_umolL", 
+                "Low_Tide_Mean_Phosphate_umolL", "Low_Tide_Mean_Silicate_umolL", 
+                "Low_Tide_Mean_TA", "Low_Tide_Mean_pH")
+
+predictors <- pulse_columns
+
+# Initialize a results dataframe
+results <- data.frame(Variable = character(),
+                      Beta = numeric(),
+                      P_Value = numeric(), 
+                      Marginal_R2 = numeric(), 
+                      Conditional_R2 = numeric(),
+                      AIC = numeric(),
+                      stringsAsFactors = FALSE)
+
+# Loop through each predictor
+for (variable in predictors) {
+  # Construct the formula dynamically
+  formula <- as.formula(paste("Percent_Change ~", variable, "+", random_effects))
+  
+  # Fit the model
+  model <- lmer(formula, data = PRU_model_data)
+  
+  # Get the p-value from Anova()
+  p_value <- Anova(model)[[3]]
+  # Extract the beta (fixed-effect coefficient for the predictor)
+  beta_value <- fixef(model)[[variable]] 
+  
+  # Get R^2 values
+  r2_values <- r.squaredGLMM(model)
+  marginal_r2 <- r2_values[1]  # Marginal R^2
+  conditional_r2 <- r2_values[2]  # Conditional R^2
+  
+  # Get AIC values
+  aic_value <- AIC(model)
+  
+  # Append results to the dataframe
+  results <- rbind(results, 
+                   data.frame(Variable = variable, 
+                              Beta = beta_value,
+                              P_Value = p_value, 
+                              AIC = aic_value,
+                              Marginal_R2 = marginal_r2, 
+                              Conditional_R2 = conditional_r2
+                              ))
+}
+
+# Display the results
+print(results[order(results$AIC),])
+```
 
 ### polynomial
 ```{r}
