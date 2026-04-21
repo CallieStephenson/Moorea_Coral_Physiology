@@ -399,7 +399,7 @@ source <- load_source_data(filename=source.filename,
 
 
 ```{r PAC Discrim}
-discr.filename <- "/Users/calliestephenson/Documents/GitHub/MooreaCoralFish_CS/data/discr3.csv"
+discr.filename <- here("data", "discr3.csv")
 discr <- load_discr_data(filename=discr.filename, mix)
 ```
 
@@ -830,7 +830,7 @@ source <- load_source_data(filename=source.filename,
 ```
 This is where the change is!
 ```{r PAC Discrim}
-discr.filename <- "/Users/calliestephenson/Documents/GitHub/MooreaCoralFish_CS/data/discr2.csv"
+discr.filename <- here("data", "discr2.csv")
 discr <- load_discr_data(filename=discr.filename, mix)
 ```
 
