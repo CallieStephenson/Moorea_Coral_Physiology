@@ -204,7 +204,7 @@ pac_growth_raw_legend <- ggplot(PAC_model_data_clean, aes(x = pc1, y = Percent_C
   geom_point() +
   labs(
     x = "PC1",
-    y = "Percent Change in Buoyant Weight",
+    y = "Buoyant Weight (% Change)",
     title = " "
     #title = expression(italic("Pocillopora acuta") ~ "Change in Buoyant Weight by Nutrient Pulses")
   ) +
@@ -313,7 +313,7 @@ pru_growth_raw_legend <- ggplot(PRU_model_data, aes(x = pc1, y = Percent_Change,
     values = c("A" = 15, "B" = 17, "C" = 16),
     labels = c("A" = "Caged", "B" = "Partially Caged", "C" = "Uncaged")  # Custom shape labels
   )+
-  labs(x = "PC1", y = "Percent Change in Buoyant Weight", title = " ") +
+  labs(x = "PC1", y = "Buoyant Weight (% Change)", title = " ") +
   scale_color_fish_d(option = "Coryphaena_hippurus", direction = -1) +
   theme_minimal()+
   theme(plot.background = element_rect(fill = "white")) +
@@ -579,7 +579,7 @@ This model does not support the hypothesis that nutrients from SGD contribute to
 pac_chl_raw <- ggplot(PAC_model_data, aes(x = pc1, y = Chl_ug.cm.2, color = Genotype, shape = Cage_Uncaged)) +
   geom_point() +
   labs(x = "PC1", 
-       y = expression(paste("Chlorophyll density (μg ", cm^2, ")")),
+       y = expression(paste("Total Chlorophyll (μg ", cm^-2, ")")),
       title = " ") +
   scale_color_fish_d(option = "Coryphaena_hippurus", direction = -1) +
   theme_minimal()+
@@ -635,7 +635,7 @@ pac_chl_MOD <-ggplot() +
                  #color = Genotype, 
                  shape = Cage_Uncaged), data = PAC_model_data) +
   labs(x = "PC1", 
-       y = expression(paste("Chlorophyll density (μg ", cm^2, ")")),
+       y = expression(paste("Total Chlorophyll (μg ", cm^-2, ")")),
       title = " ",
     color = "Genotype",
     shape = "Caging Treatment") +
@@ -748,7 +748,7 @@ pred_chl_pH <- ggpredict(linear_chl_pH_pac, terms = "Low_Tide_Mean_pH")
 plot_chl_pH <- ggplot() +
   geom_point(aes(x = Low_Tide_Mean_pH, y = Chl_ug.cm.2, color = Genotype, shape = Cage_Uncaged), data = PAC_model_data) +
   labs(x = "Low Tide Mean pH", 
-       y = expression(paste("Chlorophyll density (μg ", cm^2, ")")),
+       y = expression(paste("Total Chlorophyll (μg ", cm^-2, ")")),
       title = " ") +
   scale_color_fish_d(option = "Coryphaena_hippurus", direction = -1) +
   theme_minimal()+
@@ -803,7 +803,7 @@ r2_values <- r.squaredGLMM(linear_chl_NN_pac)
 plot_chl_NN <- ggplot() +
   geom_point(aes(x = Low_Tide_Mean_NN_umolL, y = Chl_ug.cm.2, color = Genotype, shape = Cage_Uncaged), data = PAC_model_data) +
   labs(x = "Low Tide Mean Nitrate + Nitrite (umolL)", 
-       y = expression(paste("Chlorophyll density (μg ", cm^2, ")")),
+       y = expression(paste("Total Chlorophyll (μg ", cm^-2, ")")),
       title = " ") +
   scale_color_fish_d(option = "Coryphaena_hippurus", direction = -1) +
   theme_minimal()+
@@ -851,7 +851,7 @@ plot_chl <- ggplot() +
   scale_y_continuous(limits = c(-1.5,25)) +
   labs(
     x = "PC1",
-    y = expression(paste("Chlorophyll density (μg ", cm^2, ")"))
+    y = expression(paste("Total Chlorophyll (μg ", cm^-2, ")"))
   ) +
   custom_theme+
   annotate("text", y = 1, x = max(pred_chl_poly$x, na.rm=TRUE), 
@@ -869,8 +869,8 @@ plot_chl_growth <- ggplot() +
              aes(x = Chl_ug.cm.2, y = Percent_Change,
                  color= Genotype, shape = Cage_Uncaged)) +
   labs(
-    y = "Percent Change in Buoyant Weight",
-    x = expression(paste("Chlorophyll density (μg ", cm^2, ")"))
+    y = "Buoyant Weight (% Change)",
+    x = expression(paste("Total Chlorophyll (μg ", cm^-2, ")"))
   ) +
   scale_color_fish_d(option = "Coryphaena_hippurus", direction = -1)+
   custom_theme+
@@ -887,7 +887,7 @@ pru_chl_raw <- ggplot(PRU_model_data, aes(x = pc1, y = Chl_ug.cm.2,
                                           shape = Cage_Uncaged)) +
   geom_point() +
   labs(x = "PC1", 
-       y = expression(paste("Chlorophyll density (μg ", cm^2, ")")),
+       y = expression(paste("Total Chlorophyll (μg ", cm^-2, ")")),
       title = " ") +
   scale_color_fish_d(option = "Coryphaena_hippurus", direction = -1) +
   theme_minimal()+
@@ -1218,11 +1218,30 @@ Anova(linear_pe_model_pru)
 
 # Heterotrophy
 An SI thing for Chris:  "Plot your C:N vs. d13C to see if there was a strong pattern, plot a regression to it and check that it isn't rapidly increasing etc. Say that you inspected the C:N vs. d13C for patterns, saw none or whatever. Can be an SI thing"
+FOR PLOTTING:
+```{r}
+response_data_plot <- response_data %>% 
+  mutate(Genotype_original = Genotype,
+         Genotype = case_match(Genotype, 
+           "PA22" ~ "PA1",
+           "PA21" ~ "PA2",
+           "PA11" ~ "PA3",
+           "PA19" ~ "PA4",
+           "PA13" ~ "PA5",
+           "PA18" ~ "PA6",
+           "PR08" ~ "PR1",
+           "PR06" ~ "PR2",
+           "PR03" ~ "PR3",
+           "PR02" ~ "PR4",
+           "PR07" ~ "PR5",
+           "PR04" ~ "PR6"
+         ))
+```
 
 ```{r}
 plot_cn_d13c <- ggplot() +
-  geom_point(aes(x = δ13C_symb, y = C_N_ratio_symb, color = Genotype, shape = "Symbiont"), data = response_data) +
-  geom_point(aes(x = δ13C_host, y = C_N_ratio_host, color = Genotype, shape = "Host"), data = response_data) +
+  geom_point(aes(x = δ13C_symb, y = C_N_ratio_symb, color = Genotype, shape = "Symbiont"), data = response_data_plot) +
+  geom_point(aes(x = δ13C_host, y = C_N_ratio_host, color = Genotype, shape = "Host"), data = response_data_plot) +
   labs(
     x = expression(delta^13*C),
     y = "Carbon to Nitrogen Ratio",
@@ -1239,6 +1258,14 @@ plot_cn_d13c <- ggplot() +
   facet_wrap(~Species)
 
 plot_cn_d13c
+
+ggsave(
+  "output/FigureS3.png",
+  plot = plot_cn_d13c,
+  width = 8,
+  height = 5,
+  dpi = 600
+)
 
 
 model_symb <- lmer(C_N_ratio_symb ~ δ13C_symb + (1 | Genotype), data = response_data)

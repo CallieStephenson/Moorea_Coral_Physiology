@@ -178,6 +178,27 @@ Symb_plots <- symb_pc1[,c("pc1", "δ13C_symb", "δ15N_symb", "Species", "Genotyp
 min_13C <- min(c(Symb_plots$del13C, Zoop_POM_SI$del13C), na.rm = TRUE)
 max_13C <- max(c(Symb_plots$del13C, Zoop_POM_SI$del13C), na.rm = TRUE)
 ```
+
+### edit genotype
+```{r}
+Symb_plots <- Symb_plots %>% 
+  mutate(Genotype_original = Genotype,
+         Genotype = case_match(Genotype, 
+           "PA22" ~ "PA1",
+           "PA21" ~ "PA2",
+           "PA11" ~ "PA3",
+           "PA19" ~ "PA4",
+           "PA13" ~ "PA5",
+           "PA18" ~ "PA6",
+           "PR08" ~ "PR1",
+           "PR06" ~ "PR2",
+           "PR03" ~ "PR3",
+           "PR02" ~ "PR4",
+           "PR07" ~ "PR5",
+           "PR04" ~ "PR6"
+         ))
+```
+
 #### 13C Plots
 
 ```{r}
@@ -542,7 +563,7 @@ MixSIAR_PAC <- ggplot(PAC_MixSIAR, aes(x = Source)) +
 MixSIAR_PAC
 
 #ggsave
-ggsave("output/MIXSIARresultspac.png", plot = MixSIAR_PAC,  width = 4, height = 4, dpi = 600)
+ggsave("output/MIXSIARresultspac.png", plot = MixSIAR_PAC,  width = 4, height = 4.5, dpi = 600)
 
 ```
 
@@ -681,7 +702,10 @@ MixSIAR_PRU <- ggplot(PRU_MixSIAR, aes(x = Source)) +
     alpha = 0.5
   ) +
   geom_point(aes(y = Mean * 100), color = "black", size = 2) +  # Add mean points
-  scale_fill_manual(values = c("Autotrophy" = "#21908c", "Heterotrophy" = "#47c16e", "Seep-derived \n Heterotrophy" = "#fde725"), name = NULL) +  # Add yellow for Seep
+  scale_fill_manual(values = c("Autotrophy" = "#21908c", 
+                               "Heterotrophy" = "#47c16e", 
+                               "Seep-derived \n Heterotrophy" = "#fde725"), 
+                    name = NULL) + 
   labs(y = "Contribution to Host (%)", x = "") +
   theme_minimal() + 
   scale_y_continuous(limits = c(0, 100)) +
@@ -695,7 +719,7 @@ MixSIAR_PRU <- ggplot(PRU_MixSIAR, aes(x = Source)) +
 # Print the plot
 MixSIAR_PRU
 
-ggsave("output/MIXSIARresultspru.png", plot = MixSIAR_PRU,  width = 4, height = 4, dpi = 600)
+ggsave("output/MIXSIARresultspru.png", plot = MixSIAR_PRU,  width = 4, height = 4.5, dpi = 600)
 ```
 
 # Plotting Results Together
